@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"github.com/micro/go-config"
 	"github.com/micro/go-config/source/env"
 	"github.com/micro/go-config/source/file"
@@ -50,9 +49,7 @@ func LoadConfig(filepath string) *Config {
 	c := &Config{}
 	pwd, _ := os.Getwd()
 	fileSource := file.NewSource(file.WithPath(path.Join(pwd, filepath)))
-	fmt.Println(path.Join(pwd, filepath))
 	checkErr(config.Load(fileSource))
-	fmt.Println(1111)
 	// env 的配置会覆盖文件中的配置
 	envSource := env.NewSource(env.WithStrippedPrefix(config.Get("env-var-prefix").String("CLOUD")))
 	checkErr(config.Load(envSource))

@@ -17,7 +17,7 @@ var (
 
 func init() {
 	flag.BoolVar(&h, "h", false, "the help")
-	flag.StringVar(&c, "c", "config/config.yml", "set configuration `file`")
+	flag.StringVar(&c, "c", "config/config.yml", "set the relative path of the configuration `file`.")
 }
 
 func main() {
