@@ -38,7 +38,6 @@ type service struct {
 
 var ServiceError = errors.New("service error")
 
-
 func NewService(db *gorm.DB, redisClient *redis.Client, baseFs afero.Fs, conf *config.Config, pub pubsub.PubQueue) Service {
 	s := store.NewStore(db, redisClient)
 	tSvc := NewTicketService(s, time.Duration(conf.Ticket.TTL)*time.Second)

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/gin-gonic/gin"
 	"github.com/wq1019/cloud_disk/errors"
 	"github.com/wq1019/cloud_disk/model"
 	"github.com/wq1019/cloud_disk/pkg/hasher"
@@ -63,25 +64,43 @@ func NewUserService(us model.UserStore, cs model.CertificateStore, tSvc model.Ti
 }
 
 func UserLoad(ctx context.Context, id int64) (*model.User, error) {
-	return FromContext(ctx).UserLoad(id)
+	if service, ok := ctx.Value("service").(Service); ok {
+		return service.UserLoad(id)
+	}
+	return nil, ServiceError
 }
 
 func UserCreate(ctx context.Context, user *model.User) error {
-	return FromContext(ctx).UserCreate(user)
+	if service, ok := ctx.Value("service").(Service); ok {
+		return service.UserCreate(user)
+	}
+	return ServiceError
 }
 
-func UserLogin(ctx context.Context, account, password string) (*model.Ticket, error) {
-	return FromContext(ctx).UserLogin(account, password)
+func UserLogin(ctx *gin.Context, account, password string) (*model.Ticket, error) {
+	if service, ok := ctx.Value("service").(Service); ok {
+		return service.UserLogin(account, password)
+	}
+	return nil, ServiceError
 }
 
-func UserRegister(ctx context.Context, account string, certificateType model.CertificateType, password string) (userId int64, err error) {
-	return FromContext(ctx).UserRegister(account, certificateType, password)
+func UserRegister(ctx *gin.Context, account string, certificateType model.CertificateType, password string) (userId int64, err error) {
+	if service, ok := ctx.Value("service").(Service); ok {
+		return service.UserRegister(account, certificateType, password)
+	}
+	return 0, ServiceError
 }
 
 func UserUpdatePassword(ctx context.Context, userId int64, newPassword string) error {
-	return FromContext(ctx).UserUpdatePassword(userId, newPassword)
+	if service, ok := ctx.Value("service").(Service); ok {
+		return service.UserUpdatePassword(userId, newPassword)
+	}
+	return ServiceError
 }
 
 func UserListByUserIds(ctx context.Context, userIds []interface{}) ([]*model.User, error) {
-	return FromContext(ctx).UserListByUserIds(userIds)
+	if service, ok := ctx.Value("service").(Service); ok {
+		return service.UserListByUserIds(userIds)
+	}
+	return nil, ServiceError
 }
