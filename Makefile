@@ -1,11 +1,11 @@
 docker:
-	docker build -t xxx:latest -f Dockerfile.server .
-	docker build -t xxx_worker:latest -f Dockerfile.worker .
+	docker build -t cloud-disk:latest -f Dockerfile.server .
+	docker build -t cloud-disk_worker:latest -f Dockerfile.worker .
 docker_upload: docker
-	docker tag xxx:latest registry.cn-hangzhou.aliyuncs.com/zm-dev/xxx:latest
-	docker push registry.cn-hangzhou.aliyuncs.com/zm-dev/xxx:latest
-	docker tag xxx_worker:latest registry.cn-hangzhou.aliyuncs.com/zm-dev/xxx_worker:latest
-	docker push registry.cn-hangzhou.aliyuncs.com/zm-dev/xxx_worker:latest
+	docker tag cloud-disk:latest registry.cn-hangzhou.aliyuncs.com/wqer1019/cloud-disk:latest
+	docker push registry.cn-hangzhou.aliyuncs.com/wqer1019/cloud-disk:latest
+	docker tag cloud-disk_worker:latest registry.cn-hangzhou.aliyuncs.com/wqer1019/cloud-disk_worker:latest
+	docker push registry.cn-hangzhou.aliyuncs.com/wqer1019/cloud-disk_worker:latest
 run:
-	docker run -d xxx:latest
-	docker run -d xxx_worker:latest
+	docker run -d cloud-disk:latest
+	docker run -d cloud-disk_worker:latest

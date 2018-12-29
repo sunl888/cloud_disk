@@ -36,6 +36,11 @@ func NotFound(message string, err ...error) error {
 	return gerrors.NotFound(10005, message, err...)
 }
 
+// 记录不存在
+func RecordNotFound(message string) error {
+	return gerrors.NotFound(10010, message, nil)
+}
+
 // 没有权限
 func Forbidden(msg string, err ...error) error {
 	return gerrors.Forbidden(10006, msg, err...)

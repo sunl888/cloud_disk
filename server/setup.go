@@ -56,7 +56,12 @@ func setupGorm(debug bool, databaseConfig *config.DatabaseConfig) *gorm.DB {
 func autoMigrate(db *gorm.DB) {
 	err := db.AutoMigrate(
 		&model.User{},
+		&model.UserInfo{},
 		&model.Certificate{},
+		&model.File{},
+		&model.Group{},
+		&model.Share{},
+		&model.Folder{},
 	).Error
 	if err != nil {
 		log.Fatalf("AutoMigrate 失败！ error: %+v", err)

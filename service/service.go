@@ -17,12 +17,22 @@ type Service interface {
 	model.TicketService
 	model.UserService
 	model.CertificateService
+	model.FileService
+	model.GroupService
+	model.ShareService
+	model.FolderService
+	model.UserInfoService
 }
 
 type service struct {
 	model.TicketService
 	model.UserService
 	model.CertificateService
+	model.FileService
+	model.GroupService
+	model.ShareService
+	model.FolderService
+	model.UserInfoService
 }
 
 func NewService(db *gorm.DB, redisClient *redis.Client, baseFs afero.Fs, conf *config.Config, pub pubsub.PubQueue) Service {
@@ -39,5 +49,10 @@ func NewService(db *gorm.DB, redisClient *redis.Client, baseFs afero.Fs, conf *c
 		tSvc,
 		NewUserService(s, s, tSvc, h),
 		NewCertificateService(s),
+		NewFileService(s),
+		NewGroupService(s),
+		NewShareService(s),
+		NewFolderService(s),
+		NewUserInfoService(s),
 	}
 }
