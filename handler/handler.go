@@ -58,7 +58,7 @@ func CreateHTTPHandler(s *server.Server) http.Handler {
 	}
 	router := gin.Default()
 	router.Use(middleware.Gorm(s.DB))
-	router.Use(middleware.Service(s.Service))
+	router.Use(middleware.ServiceMiddleware(s.Service))
 	router.Use(middleware.NewHandleErrorMiddleware(s.Conf.ServiceName))
 	api := router.Group("/api")
 
