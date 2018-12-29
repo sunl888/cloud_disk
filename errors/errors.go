@@ -1,11 +1,8 @@
 package errors
 
 import (
-	"errors"
 	"github.com/zm-dev/gerrors"
 )
-
-var RecordNotFoundError = errors.New("record not found")
 
 // 参数绑定出错
 func BindError(err error) error {
