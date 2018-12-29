@@ -3,7 +3,6 @@ package subscribe
 import (
 	"context"
 	"github.com/wq1019/cloud_disk/pkg/pubsub"
-	"github.com/wq1019/cloud_disk/queue/subscribe/wrapper"
 	"github.com/wq1019/cloud_disk/server"
 )
 
