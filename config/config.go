@@ -38,7 +38,7 @@ type MinioConfig struct {
 	Host                string `json:"host"`
 	AccessKey           string `json:"accesskey"`
 	SecretKey           string `json:"secretkey"`
-	SSL                 bool   `json:"ssl"`
+	SSL                 string `json:"ssl"`
 	BucketName          string `json:"bucketname"`
 }
 

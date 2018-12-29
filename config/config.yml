@@ -32,5 +32,5 @@ minio:
   host: "xxx"
   accesskey: "xxx"
   secretkey: "xxx"
-  ssl: false
+  ssl: "false"
   bucketname: "xxx"

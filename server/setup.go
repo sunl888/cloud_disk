@@ -103,11 +103,13 @@ func setupFileStore(s *Server) go_file_uploader.Store {
 }
 
 func setupMinio(s *Server) *minio.Client {
+	// TODO 这里不知道为什么不能设置为bool类型,只能用字符串表示,然后转成bool
+	SslEnable := s.Conf.Minio.SSL == "true"
 	minioClient, err := minio.New(
 		s.Conf.Minio.Host,
 		s.Conf.Minio.AccessKey,
 		s.Conf.Minio.SecretKey,
-		s.Conf.Minio.SSL,
+		SslEnable,
 	)
 	if err != nil {
 		log.Fatalf("minio client 创建失败! error: %+v", err)
