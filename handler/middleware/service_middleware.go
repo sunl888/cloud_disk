@@ -5,9 +5,15 @@ import (
 	"github.com/wq1019/cloud_disk/service"
 )
 
-func Service(svc service.Service) gin.HandlerFunc {
+var ServiceKey = "service"
+
+func SetService(c *gin.Context, s service.Service) {
+	c.Set(ServiceKey, s)
+}
+
+func ServiceMiddleware(s service.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Request = c.Request.WithContext(service.NewContext(c.Request.Context(), svc))
+		SetService(c, s)
 		c.Next()
 	}
 }
