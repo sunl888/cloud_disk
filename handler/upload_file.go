@@ -8,8 +8,10 @@ import (
 	"github.com/zm-dev/go-file-uploader"
 	"io"
 	"io/ioutil"
-	"mime"
+	"log"
+	"net/http"
 	"os"
+	"strings"
 )
 
 type uploadFile struct {
@@ -30,11 +32,20 @@ func copy2TmpFile(file io.Reader) (tmpFileName string, err error) {
 }
 
 func (uf *uploadFile) UploadFile(c *gin.Context) {
-	l := &struct {
+	l := struct {
 		FolderId int64 `json:"folder_id" form:"folder_id"`
 	}{}
 	if err := c.ShouldBind(&l); err != nil {
-		_ = c.Error(errors.BadRequest("请指定上传的文件夹", err))
+		_ = c.Error(errors.BindError(err))
+		return
+	}
+	if l.FolderId == 0 {
+		_ = c.Error(errors.BadRequest("请指定上传的文件夹", nil))
+		return
+	}
+	folder, err := service.LoadFolder(c, l.FolderId)
+	if err != nil {
+		_ = c.Error(err)
 		return
 	}
 	uploadFile, fh, err := c.Request.FormFile("file")
@@ -48,38 +59,32 @@ func (uf *uploadFile) UploadFile(c *gin.Context) {
 	if err != nil {
 		defer os.Remove(tmpFileName)
 	}
-	uFile, err := uf.u.Upload(go_file_uploader.FileHeader{Filename: fh.Filename, Size: fh.Size / 1024, File: uploadFile}, "")
+	uFile, err := uf.u.Upload(go_file_uploader.FileHeader{Filename: fh.Filename, Size: fh.Size, File: uploadFile}, "")
 	if err != nil {
+		log.Println(err)
 		_ = c.Error(errors.InternalServerError("上传失败", err))
 		return
 	}
 	fileModel := convert2FileModel(uFile)
-	fileModel.Extra = mime.TypeByExtension(uFile.Format)
-	fileModel.FolderId = l.FolderId
-	err = service.UpdateFile(c, fileModel.Id, fileModel)
+	err = service.SaveFileToFolder(c, fileModel, folder)
 	if err != nil {
 		_ = c.Error(err)
 		return
 	}
-	//type Cover struct {
-	//	Hash string `json:"hash"`
-	//	Url  string `json:"url"`
-	//}
-	//
-	//var coverHashUrl []*Cover
-	//if len(data.CoverHash) > 0 {
-	//	coverHashUrl = make([]*Cover, 0, len(data.CoverHash))
-	//	for _, h := range data.CoverHash {
-	//		coverHashUrl = append(coverHashUrl, &Cover{
-	//			Hash: h,
-	//			Url:  uf.imageUrl.Generate(h),
-	//		})
-	//	}
-	//} else {
-	//	coverHashUrl = make([]*Cover, 0)
-	//}
-	//c.JSON(200, gin.H{"hash": fileModel.Hash, "cover_hash": coverHashUrl})
+	c.Status(http.StatusCreated)
 }
+
+func (uf *uploadFile) ShowFile(c *gin.Context) {
+	hash := strings.TrimSpace(c.Param("hash"))
+	s := uf.u.Store()
+	fileModel, err := s.FileLoad(hash)
+	if s.FileIsNotExistError(err) {
+		_ = c.Error(errors.NotFound("文件不存在"))
+		return
+	}
+	c.JSON(200, fileModel)
+}
+
 func convert2FileModel(upload *go_file_uploader.FileModel) *model.File {
 	return &model.File{
 		Hash:      upload.Hash,
@@ -90,17 +95,6 @@ func convert2FileModel(upload *go_file_uploader.FileModel) *model.File {
 		UpdatedAt: upload.UpdatedAt,
 	}
 }
-
-/*func (uf *uploadFile) ShowFile(c *gin.Context) {
-	hash := strings.TrimSpace(c.Param("hash"))
-	s := uf.u.Store()
-	fileModel, err := s.FileLoad(hash)
-	if s.FileIsNotExistError(err) {
-		c.Error(errors.NotFound("file not found"))
-		return
-	}
-	c.JSON(200, fileModel)
-}*/
 
 func NewUploadFile(u go_file_uploader.Uploader) *uploadFile {
 	return &uploadFile{u: u}
