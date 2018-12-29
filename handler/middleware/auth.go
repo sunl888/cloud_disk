@@ -13,10 +13,18 @@ var (
 	loggedUserKey = "logged_user"
 )
 
+// TODO 设置默认用户
+func defaultUser(c *gin.Context) {
+	setIsLogin(c, true)
+	setUserId(c, 1)
+}
+
 func AuthMiddleware(c *gin.Context) {
+	// TODO 登录成功
+	defaultUser(c)
 	isLogin := check(c)
 	if !isLogin {
-		c.Error(errors.Unauthorized())
+		_ = c.Error(errors.Unauthorized())
 		c.Abort()
 		return
 	}
@@ -26,7 +34,7 @@ func AuthMiddleware(c *gin.Context) {
 func AdminMiddleware(c *gin.Context) {
 	user := LoggedUser(c)
 	if user == nil || !user.IsAdmin {
-		c.Error(errors.Forbidden("没有权限.", nil))
+		_ = c.Error(errors.Forbidden("没有权限.", nil))
 		c.Abort()
 		return
 	}

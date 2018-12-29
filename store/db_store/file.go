@@ -2,6 +2,7 @@ package db_store
 
 import (
 	"github.com/jinzhu/gorm"
+	"github.com/wq1019/cloud_disk/errors"
 	"github.com/wq1019/cloud_disk/model"
 )
 
@@ -30,7 +31,14 @@ func (f *dbFile) IsExistFile(id, userId int64) (isExist bool, err error) {
 }
 
 func (f *dbFile) UpdateFile(id int64, file *model.File) (err error) {
-	panic("implement me")
+	err = f.db.Model(model.File{}).
+		Where("id = ?", id).
+		Update(&file).
+		Error
+	if gorm.IsRecordNotFoundError(err) {
+		err = errors.RecordNotFound("文件不存在")
+	}
+	return
 }
 
 func NewDBFile(db *gorm.DB) model.FileStore {

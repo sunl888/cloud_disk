@@ -27,3 +27,10 @@ ticket:
   ttl: 2592000
 
 queue-num: 20
+
+minio:
+  host: "xxx"
+  accesskey: "xxx"
+  secretkey: "xxx"
+  ssl: false
+  bucketname: "xxx"

@@ -33,6 +33,15 @@ type FilesystemConfig struct {
 	Root   string `json:"root"`
 }
 
+type MinioConfig struct {
+	ExternalNetworkHost string `json:"externalnetworkhost"`
+	Host                string `json:"host"`
+	AccessKey           string `json:"accesskey"`
+	SecretKey           string `json:"secretkey"`
+	SSL                 bool   `json:"ssl"`
+	BucketName          string `json:"bucketname"`
+}
+
 type Config struct {
 	EnvVarPrefix string           `json:"env-var-prefix"`
 	ServiceName  string           `json:"service-name"`
@@ -43,6 +52,7 @@ type Config struct {
 	DB           DatabaseConfig   `json:"database"`
 	Redis        RedisConfig      `json:"redis"`
 	Ticket       TicketConfig     `json:"ticket"`
+	Minio        MinioConfig      `json:"minio"`
 }
 
 func LoadConfig(filepath string) *Config {

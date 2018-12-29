@@ -6,11 +6,14 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	_ "github.com/joho/godotenv/autoload"
+	"github.com/minio/minio-go"
 	"github.com/spf13/afero"
 	"github.com/wq1019/cloud_disk/config"
 	"github.com/wq1019/cloud_disk/model"
 	"github.com/wq1019/cloud_disk/pkg/pubsub"
 	"github.com/wq1019/cloud_disk/service"
+	"github.com/zm-dev/go-file-uploader"
+	file_uploader_minio "github.com/zm-dev/go-file-uploader/minio"
 	"go.uber.org/zap"
 	"log"
 	"os"
@@ -85,6 +88,33 @@ func setupFilesystem(fsConfig *config.FilesystemConfig) afero.Fs {
 	}
 }
 
+func setupFileUploader(s *Server) go_file_uploader.Uploader {
+	return file_uploader_minio.NewMinioUploader(
+		go_file_uploader.HashFunc(go_file_uploader.MD5HashFunc),
+		setupMinio(s),
+		setupFileStore(s),
+		s.Conf.Minio.BucketName,
+		go_file_uploader.Hash2StorageNameFunc(go_file_uploader.TwoCharsPrefixHash2StorageNameFunc),
+	)
+}
+
+func setupFileStore(s *Server) go_file_uploader.Store {
+	return go_file_uploader.NewDBStore(s.DB)
+}
+
+func setupMinio(s *Server) *minio.Client {
+	minioClient, err := minio.New(
+		s.Conf.Minio.Host,
+		s.Conf.Minio.AccessKey,
+		s.Conf.Minio.SecretKey,
+		s.Conf.Minio.SSL,
+	)
+	if err != nil {
+		log.Fatalf("minio client 创建失败! error: %+v", err)
+	}
+	return minioClient
+}
+
 func loadEnv(appEnv string) string {
 	if appEnv == "" {
 		appEnv = "production"
@@ -122,5 +152,7 @@ func SetupServer(configPath string) *Server {
 	s.Logger.Debug("load service...")
 	s.Pub = pubsub.NewPub(s.RedisClient, s.Logger)
 	s.Service = service.NewService(s.DB, s.RedisClient, s.BaseFs, s.Conf, s.Pub)
+	s.Logger.Debug("load uploader service...")
+	s.FileUploader = setupFileUploader(s)
 	return s
 }

@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/wq1019/cloud_disk/errors"
+	"github.com/wq1019/cloud_disk/model"
 	"github.com/wq1019/cloud_disk/service"
 	"net/http"
 	"strconv"
@@ -18,12 +19,12 @@ func (authHandler) Login(c *gin.Context) {
 		Password string `form:"password" json:"password"`
 	}{}
 	if err := c.ShouldBind(req); err != nil {
-		c.Error(errors.BindError(err))
+		_ = c.Error(errors.BindError(err))
 		return
 	}
 	ticket, err := service.UserLogin(c.Request.Context(), strings.TrimSpace(req.Account), strings.TrimSpace(req.Password))
 	if err != nil {
-		c.Error(err)
+		_ = c.Error(err)
 		return
 	}
 	setAuthCookie(c, ticket.Id, ticket.UserId, int(ticket.ExpiredAt.Sub(time.Now()).Seconds()))
@@ -37,12 +38,27 @@ func (authHandler) Logout(c *gin.Context) {
 		return
 	}
 	removeAuthCookie(c)
-	service.TicketDestroy(c.Request.Context(), ticketId)
+	_ = service.TicketDestroy(c.Request.Context(), ticketId)
 	c.JSON(http.StatusNoContent, nil)
 }
 
-func NewAuthHandler() *authHandler {
-	return &authHandler{}
+func (authHandler) Register(c *gin.Context) {
+	type Req struct {
+		Account  string `form:"account" json:"account"`
+		Password string `form:"password" json:"password"`
+	}
+	req := &Req{}
+
+	if err := c.ShouldBind(req); err != nil {
+		_ = c.Error(err)
+		return
+	}
+	regResp, err := service.UserRegister(c, strings.TrimSpace(req.Account), model.CertificateType(0), req.Password)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	c.JSON(201, regResp)
 }
 
 func setAuthCookie(c *gin.Context, ticketId string, userId int64, maxAge int) {
@@ -53,4 +69,8 @@ func setAuthCookie(c *gin.Context, ticketId string, userId int64, maxAge int) {
 func removeAuthCookie(c *gin.Context) {
 	c.SetCookie("ticket_id", "", -1, "", "", false, true)
 	c.SetCookie("user_id", "", -1, "", "", false, false)
+}
+
+func NewAuthHandler() *authHandler {
+	return &authHandler{}
 }

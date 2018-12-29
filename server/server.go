@@ -7,17 +7,19 @@ import (
 	"github.com/wq1019/cloud_disk/config"
 	"github.com/wq1019/cloud_disk/pkg/pubsub"
 	"github.com/wq1019/cloud_disk/service"
+	"github.com/zm-dev/go-file-uploader"
 	"go.uber.org/zap"
 )
 
 type Server struct {
-	AppEnv      string
-	Debug       bool
-	BaseFs      afero.Fs
-	RedisClient *redis.Client
-	DB          *gorm.DB
-	Conf        *config.Config
-	Logger      *zap.Logger
-	Service     service.Service
-	Pub         pubsub.PubQueue
+	Debug        bool
+	AppEnv       string
+	BaseFs       afero.Fs
+	DB           *gorm.DB
+	Logger       *zap.Logger
+	RedisClient  *redis.Client
+	Conf         *config.Config
+	Pub          pubsub.PubQueue
+	Service      service.Service
+	FileUploader go_file_uploader.Uploader
 }

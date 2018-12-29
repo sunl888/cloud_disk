@@ -9,7 +9,7 @@ type Folder struct {
 	FolderName string     `gorm:"type:varchar(255)" json:"folder_name"` // 目录名称
 	CreatedAt  time.Time  `json:"created_at"`                           // 创建时间
 	UpdatedAt  time.Time  `json:"updated_at"`                           // 更新时间
-	DeletedAt  *time.Time `gorm:"-" json:"deleted_at"`                  // 软删除时间
+	DeletedAt  *time.Time `json:"deleted_at"`                           // 软删除时间
 }
 
 type FolderStore interface {
@@ -18,4 +18,3 @@ type FolderStore interface {
 type FolderService interface {
 	FolderStore
 }
-

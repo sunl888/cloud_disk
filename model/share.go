@@ -4,7 +4,7 @@ import "time"
 
 type Share struct {
 	Id          int64      `gorm:"primary_key" json:"id"`                                        // ID
-	Type        string     `gorm:"type:enum('private','publish') default:'publish'" json:"type"` // 分享类型 私有分享和公开分享
+	Type        string     `gorm:"type:enum('private','publish');default:'publish'" json:"type"` // 分享类型 私有分享和公开分享
 	SourceType  string     `gorm:"type:enum('file','dir')" json:"source_type"`                   // 资源类型 文件还是目录
 	SourceId    string     `json:"source_id"`                                                    // 资源ID 对应files表或者folders表的ID字段
 	SharePwd    string     `gorm:"type:varchar(64);not null" json:"share_pwd"`                   // 分享密码

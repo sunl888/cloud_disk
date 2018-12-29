@@ -49,6 +49,8 @@ func getInt64LimitAndOffset(c *gin.Context) (limit, offset int64) {
 func CreateHTTPHandler(s *server.Server) http.Handler {
 	authHandler := NewAuthHandler()
 	meHandler := NewMeHandler()
+	uploadFileHandler := NewUploadFile(s.FileUploader)
+
 	if s.Debug {
 		gin.SetMode(gin.DebugMode)
 	} else {
@@ -59,17 +61,23 @@ func CreateHTTPHandler(s *server.Server) http.Handler {
 	router.Use(middleware.Service(s.Service))
 	router.Use(middleware.NewHandleErrorMiddleware(s.Conf.ServiceName))
 	api := router.Group("/api")
+
 	authRouter := api.Group("/auth")
+	// 注册
+	authRouter.POST("/register", authHandler.Register)
+	// 登录
+	authRouter.POST("/login", authHandler.Login)
 	{
-		authRouter.POST("/login", authHandler.Login)
-		authRouter.GET("/logout", authHandler.Logout)
+		authRouter.GET("/logout", authHandler.Logout).Use(middleware.AuthMiddleware)
+		authRouter.GET("/me", meHandler.Show).Use(middleware.AuthMiddleware)
 	}
 
 	authorized := api.Group("/")
 	authorized.Use(middleware.AuthMiddleware)
 	{
-		authorized.GET("/me", meHandler.Show)
+		authorized.POST("/upload_file", uploadFileHandler.UploadFile)
 	}
+
 	adminRouter := api.Group("/")
 	adminRouter.Use(middleware.AuthMiddleware, middleware.AdminMiddleware)
 	{
