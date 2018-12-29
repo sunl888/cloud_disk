@@ -13,16 +13,10 @@ var (
 	loggedUserKey = "logged_user"
 )
 
-// TODO 设置默认用户
-func defaultUser(c *gin.Context) {
-	setIsLogin(c, true)
-	setUserId(c, 1)
-}
-
 func AuthMiddleware(c *gin.Context) {
-	// TODO 登录成功
-	defaultUser(c)
-	isLogin := check(c)
+	// TODO authId
+	isLogin := true
+	//isLogin := check(c)
 	if !isLogin {
 		_ = c.Error(errors.Unauthorized())
 		c.Abort()
