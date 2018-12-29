@@ -17,12 +17,15 @@ require (
 	github.com/json-iterator/go v1.1.5 // indirect
 	github.com/mattn/go-isatty v0.0.4 // indirect
 	github.com/micro/go-config v0.13.1
+	github.com/minio/minio-go v6.0.7+incompatible
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
+	github.com/pkg/errors v0.8.0
 	github.com/rs/cors v1.6.0
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/afero v1.2.0
 	github.com/ugorji/go/codec v0.0.0-20181209151446-772ced7fd4c2 // indirect
+	github.com/urfave/cli v1.20.0
 	github.com/vmihailenco/msgpack v4.0.1+incompatible
 	github.com/zm-dev/gerrors v0.0.4
 	github.com/zm-dev/go-file-uploader v0.2.13
