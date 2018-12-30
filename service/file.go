@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/gin-gonic/gin"
+	"context"
 	"github.com/wq1019/cloud_disk/model"
 )
 
@@ -13,18 +13,12 @@ func (fileService) MoveFile(fromId, toId int64) {
 	panic("implement me")
 }
 
-func UpdateFile(c *gin.Context, id int64, file *model.File) (err error) {
-	if service, ok := c.Value("service").(Service); ok {
-		return service.UpdateFile(id, file)
-	}
-	return ServiceError
+func UpdateFile(ctx context.Context, id int64, file *model.File) (err error) {
+	return FromContext(ctx).UpdateFile(id, file)
 }
 
-func SaveFileToFolder(c *gin.Context, file *model.File, folder *model.Folder) (err error) {
-	if service, ok := c.Value("service").(Service); ok {
-		return service.SaveFileToFolder(file, folder)
-	}
-	return ServiceError
+func SaveFileToFolder(ctx context.Context, file *model.File, folder *model.Folder) (err error) {
+	return FromContext(ctx).SaveFileToFolder(file, folder)
 }
 
 func NewFileService(fs model.FileStore) model.FileService {

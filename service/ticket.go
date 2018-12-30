@@ -54,15 +54,9 @@ func NewTicketService(ts model.TicketStore, ticketTTL time.Duration) model.Ticke
 }
 
 func TicketDestroy(ctx context.Context, ticketId string) error {
-	if service, ok := ctx.Value("service").(Service); ok {
-		return service.TicketDestroy(ticketId)
-	}
-	return ServiceError
+	return FromContext(ctx).TicketDestroy(ticketId)
 }
 
 func TicketIsValid(ctx context.Context, ticketId string) (isValid bool, userId int64, err error) {
-	if service, ok := ctx.Value("service").(Service); ok {
-		return service.TicketIsValid(ticketId)
-	}
-	return false, 0, ServiceError
+	return FromContext(ctx).TicketIsValid(ticketId)
 }

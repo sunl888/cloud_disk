@@ -22,7 +22,7 @@ func (authHandler) Login(c *gin.Context) {
 		_ = c.Error(errors.BindError(err))
 		return
 	}
-	ticket, err := service.UserLogin(c, strings.TrimSpace(req.Account), strings.TrimSpace(req.Password))
+	ticket, err := service.UserLogin(c.Request.Context(), strings.TrimSpace(req.Account), strings.TrimSpace(req.Password))
 	if err != nil {
 		_ = c.Error(err)
 		return
@@ -52,7 +52,7 @@ func (authHandler) Register(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-	_, err := service.UserRegister(c, strings.TrimSpace(req.Account), model.CertificateType(0), req.Password)
+	_, err := service.UserRegister(c.Request.Context(), strings.TrimSpace(req.Account), model.CertificateType(0), req.Password)
 	if err != nil {
 		_ = c.Error(err)
 		return

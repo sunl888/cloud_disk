@@ -1,7 +1,6 @@
 package service
 
 import (
-	"errors"
 	"github.com/go-redis/redis"
 	"github.com/jinzhu/gorm"
 	"github.com/spf13/afero"
@@ -35,8 +34,6 @@ type service struct {
 	model.FolderService
 	model.UserInfoService
 }
-
-var ServiceError = errors.New("service error")
 
 func NewService(db *gorm.DB, redisClient *redis.Client, baseFs afero.Fs, conf *config.Config, pub pubsub.PubQueue) Service {
 	s := store.NewStore(db, redisClient)

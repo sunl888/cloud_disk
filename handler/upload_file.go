@@ -43,7 +43,7 @@ func (uf *uploadFile) UploadFile(c *gin.Context) {
 		_ = c.Error(errors.BadRequest("请指定上传的文件夹", nil))
 		return
 	}
-	folder, err := service.LoadFolder(c, l.FolderId)
+	folder, err := service.LoadFolder(c.Request.Context(), l.FolderId)
 	if err != nil {
 		_ = c.Error(err)
 		return
@@ -66,7 +66,7 @@ func (uf *uploadFile) UploadFile(c *gin.Context) {
 		return
 	}
 	fileModel := convert2FileModel(uFile)
-	err = service.SaveFileToFolder(c, fileModel, folder)
+	err = service.SaveFileToFolder(c.Request.Context(), fileModel, folder)
 	if err != nil {
 		_ = c.Error(err)
 		return
