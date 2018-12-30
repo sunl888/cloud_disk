@@ -30,5 +30,5 @@ type FileStore interface {
 
 type FileService interface {
 	FileStore
-	MoveFile(fromId, toId int64) // 移动文件或者目录到指定的目录下
+	//MoveFile(fromId, toId int64) // 移动文件或者目录到指定的目录下
 }
