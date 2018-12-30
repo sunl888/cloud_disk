@@ -77,7 +77,7 @@ func (uf *uploadFile) UploadFile(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-	c.Status(http.StatusCreated)
+	c.JSON(http.StatusCreated, fileModel)
 }
 
 func (uf *uploadFile) ShowFile(c *gin.Context) {
