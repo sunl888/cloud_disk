@@ -6,7 +6,7 @@ import (
 
 type File struct {
 	Id        int64      `gorm:"primary_key" json:"id"`                 // ID
-	Folders   []*Folder  `gorm:"many2many:folders_file;"`               // many2many
+	Folders   []*Folder  `gorm:"many2many:folders_file;" json:"-"`      // 仅仅用来作为关联,表示该文件可以被多个目录引用,而不需要显示 所以用 - 忽略
 	Filename  string     `gorm:"not null" json:"filename"`              // 文件名称
 	Hash      string     `gorm:"type:varchar(32);not null" json:"hash"` // 文件Hash
 	Format    string     `gorm:"not null" json:"format"`                // 文件MimeType 例如: video/mp4 -> .mp4
@@ -23,7 +23,8 @@ type FileStore interface {
 	//RecoverFile(id int64) error
 	//ListFile(limit, offset int64) (files []*File, count int64, err error)
 	//IsExistFile(id, userId int64) (isExist bool, err error)
-	UpdateFile(id int64, file *File) (err error)
+	//UpdateFile(id int64, file *File) (err error)
+	//BetchDeleteFile(ids []int64) (err error)
 	SaveFileToFolder(file *File, folder *Folder) (err error)
 }
 

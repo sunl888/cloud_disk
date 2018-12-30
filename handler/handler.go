@@ -50,6 +50,7 @@ func CreateHTTPHandler(s *server.Server) http.Handler {
 	authHandler := NewAuthHandler()
 	meHandler := NewMeHandler()
 	uploadFileHandler := NewUploadFile(s.FileUploader)
+	folderHandler := NewFolder()
 
 	if s.Debug {
 		gin.SetMode(gin.DebugMode)
@@ -76,6 +77,8 @@ func CreateHTTPHandler(s *server.Server) http.Handler {
 	authorized.Use(middleware.AuthMiddleware)
 	{
 		authorized.POST("/upload_file", uploadFileHandler.UploadFile)
+		// 指定目录下第一层的资源列表
+		authorized.GET("/folder/:id", folderHandler.LoadFolderSesource)
 	}
 
 	adminRouter := api.Group("/")

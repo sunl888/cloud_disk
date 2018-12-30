@@ -4,7 +4,8 @@ import "time"
 
 type Folder struct {
 	Id         int64      `gorm:"primary_key" json:"id"`                // ID
-	Files      []*File    `gorm:"many2many:folders_file;"`              // many2many
+	Files      []*File    `gorm:"many2many:folders_file;" json:"files"` // many2many
+	Folders    []*Folder  `gorm:"foreignkey:ParentId" json:"folders"`   // 当前目录下的目录
 	UserId     int64      `gorm:"index" json:"user_id"`                 // 创建者
 	ParentId   int64      `gorm:"default:null" json:"parent_id"`        // 父目录
 	FolderName string     `gorm:"type:varchar(255)" json:"folder_name"` // 目录名称
@@ -15,6 +16,7 @@ type Folder struct {
 
 type FolderStore interface {
 	LoadFolder(id int64) (folder *Folder, err error)
+	LoadFolderSesource(id int64) (folder *Folder, err error)
 }
 
 type FolderService interface {
