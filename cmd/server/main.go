@@ -31,7 +31,7 @@ func main() {
 	svr.Logger.Info("listen", zap.String("addr", svr.Conf.ServerAddr))
 	// cors 跨域用
 	log.Fatal(http.ListenAndServe(svr.Conf.ServerAddr, cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://10.102.9.5", "http://10.102.9.5:81"},
+		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"POST", "GET", "DELETE", "PUT", "HEAD"},
 		AllowCredentials: true,
 	}).Handler(handler.CreateHTTPHandler(svr))))
