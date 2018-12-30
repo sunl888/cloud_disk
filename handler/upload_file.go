@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/wq1019/cloud_disk/errors"
+	"github.com/wq1019/cloud_disk/handler/middleware"
 	"github.com/wq1019/cloud_disk/model"
 	"github.com/wq1019/cloud_disk/service"
 	"github.com/zm-dev/go-file-uploader"
@@ -46,6 +47,11 @@ func (uf *uploadFile) UploadFile(c *gin.Context) {
 	folder, err := service.LoadFolder(c.Request.Context(), l.FolderId)
 	if err != nil {
 		_ = c.Error(err)
+		return
+	}
+	authId := middleware.UserId(c)
+	if authId != folder.UserId {
+		_ = c.Error(errors.Unauthorized("没有访问权限"))
 		return
 	}
 	uploadFile, fh, err := c.Request.FormFile("file")
