@@ -21,16 +21,16 @@ func (f *dbFile) SaveFileToFolder(file *model.File, folder *model.Folder) (err e
 	return
 }
 
-func (f *dbFile) UpdateFile(id int64, file *model.File) (err error) {
-	err = f.db.Model(model.File{}).
-		Where("id = ?", id).
-		Update(&file).
-		Error
-	if gorm.IsRecordNotFoundError(err) {
-		err = errors.RecordNotFound("文件不存在")
-	}
-	return
-}
+//func (f *dbFile) UpdateFile(id int64, file *model.File) (err error) {
+//	err = f.db.Model(model.File{}).
+//		Where("id = ?", id).
+//		Update(&file).
+//		Error
+//	if gorm.IsRecordNotFoundError(err) {
+//		err = errors.RecordNotFound("文件不存在")
+//	}
+//	return
+//}
 
 func NewDBFile(db *gorm.DB) model.FileStore {
 	return &dbFile{db}
