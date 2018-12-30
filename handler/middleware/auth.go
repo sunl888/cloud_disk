@@ -14,9 +14,7 @@ var (
 )
 
 func AuthMiddleware(c *gin.Context) {
-	// TODO authId
-	isLogin := true
-	//isLogin := check(c)
+	isLogin := check(c)
 	if !isLogin {
 		_ = c.Error(errors.Unauthorized())
 		c.Abort()
