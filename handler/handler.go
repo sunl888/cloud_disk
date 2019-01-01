@@ -82,6 +82,13 @@ func CreateHTTPHandler(s *server.Server) http.Handler {
 		authorized.POST("/folder", folderHandler.CreateFolder)
 		// 删除文件和目录资源 (file_ids, folder_ids)
 		authorized.DELETE("/source", folderHandler.DeleteSource)
+
+		// TODO 如何避免往子目录移动,怎样复制到当前目录(未完成)
+		// 移动到指定目录
+		authorized.PUT("/source/move", folderHandler.Move2Folder)
+		// 复制到指定目录
+		authorized.PUT("/source/copy", folderHandler.Copy2Folder)
+
 	}
 
 	adminRouter := api.Group("/")

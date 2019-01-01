@@ -33,6 +33,12 @@ type FolderStore interface {
 
 	// 删除指定目录
 	DeleteFolder(ids []int64, userId int64) (err error)
+
+	// 移动目录
+	MoveFolder(to *Folder, ids []int64) (err error)
+
+	// 复制目录
+	CopyFolder(to *Folder, ids []int64) (err error)
 }
 
 type FolderService interface {

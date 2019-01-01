@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/wq1019/cloud_disk/errors"
 	"github.com/wq1019/cloud_disk/handler/middleware"
@@ -96,7 +95,6 @@ func (*folderHandler) DeleteSource(c *gin.Context) {
 	}
 	authId := middleware.UserId(c)
 	// 删除指定的文件
-	fmt.Println(l.FileIds)
 	if len(l.FileIds) > 0 {
 		currentFolder, err := service.LoadFolder(c.Request.Context(), l.CurrentFolderId, authId, false)
 		if err != nil {
@@ -118,6 +116,105 @@ func (*folderHandler) DeleteSource(c *gin.Context) {
 		}
 	}
 	c.Status(http.StatusNoContent)
+}
+
+func (*folderHandler) Move2Folder(c *gin.Context) {
+	l := struct {
+		FileIds      []int64 `json:"file_ids" form:"file_ids"`
+		FolderIds    []int64 `json:"folder_ids" form:"folder_ids"`
+		FromFolderId int64   `json:"from_folder_id" form:"from_folder_id"`
+		ToFolderId   int64   `json:"to_folder_id" form:"to_folder_id"`
+	}{}
+	if err := c.ShouldBind(&l); err != nil {
+		_ = c.Error(err)
+		return
+	}
+	if len(l.FileIds) == 0 && len(l.FolderIds) == 0 {
+		_ = c.Error(errors.BadRequest("请指定要移动的文件或者目录ID"))
+		return
+	}
+	if l.ToFolderId == 0 {
+		_ = c.Error(errors.BadRequest("请指定移动到哪个目录"))
+		return
+	}
+	authId := middleware.UserId(c)
+	fromFolder, err := service.LoadFolder(c.Request.Context(), l.FromFolderId, authId, false)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	toFolder, err := service.LoadFolder(c.Request.Context(), l.ToFolderId, authId, false)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	if fromFolder.UserId != authId || toFolder.UserId != authId {
+		_ = c.Error(errors.Unauthorized("没有权限移动"))
+		return
+	}
+	if len(l.FolderIds) > 0 {
+		err := service.MoveFolder(c.Request.Context(), toFolder, l.FolderIds)
+		if err != nil {
+			_ = c.Error(err)
+			return
+		}
+	}
+	if len(l.FileIds) > 0 {
+		err := service.MoveFile(c.Request.Context(), fromFolder.Id, toFolder.Id, l.FileIds)
+		if err != nil {
+			_ = c.Error(err)
+			return
+		}
+	}
+	c.Status(http.StatusOK)
+}
+
+func (*folderHandler) Copy2Folder(c *gin.Context) {
+	l := struct {
+		FileIds    []int64 `json:"file_ids" form:"file_ids"`
+		FolderIds  []int64 `json:"folder_ids" form:"folder_ids"`
+		ToFolderId int64   `json:"to_folder_id" form:"to_folder_id"`
+	}{}
+	if err := c.ShouldBind(&l); err != nil {
+		_ = c.Error(err)
+		return
+	}
+	if len(l.FileIds) == 0 && len(l.FolderIds) == 0 {
+		_ = c.Error(errors.BadRequest("请指定要复制的文件或者目录ID"))
+		return
+	}
+	if l.ToFolderId == 0 {
+		_ = c.Error(errors.BadRequest("请指定复制到哪个目录"))
+		return
+	}
+	authId := middleware.UserId(c)
+	toFolder, err := service.LoadFolder(c.Request.Context(), l.ToFolderId, authId, false)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	if toFolder.UserId != authId {
+		_ = c.Error(errors.Unauthorized("没有权限复制"))
+		return
+	}
+	// 复制指定的文件
+	if len(l.FileIds) > 0 {
+		//TODO 文件需要验证有没有权限复制
+		err := service.CopyFile(c.Request.Context(), toFolder.Id, l.FileIds)
+		if err != nil {
+			_ = c.Error(err)
+			return
+		}
+	}
+	// 复制指定的目录包括目录中的文件到指定位置
+	if len(l.FolderIds) > 0 {
+		err := service.CopyFolder(c.Request.Context(), toFolder, l.FolderIds)
+		if err != nil {
+			_ = c.Error(err)
+			return
+		}
+	}
+	c.Status(http.StatusOK)
 }
 
 func NewFolder() *folderHandler {

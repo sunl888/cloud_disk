@@ -25,6 +25,14 @@ func DeleteFolder(ctx context.Context, ids []int64, userId int64) (err error) {
 	return FromContext(ctx).DeleteFolder(ids, userId)
 }
 
+func MoveFolder(ctx context.Context, to *model.Folder, ids []int64) (err error) {
+	return FromContext(ctx).MoveFolder(to, ids)
+}
+
+func CopyFolder(ctx context.Context, to *model.Folder, ids []int64) (err error) {
+	return FromContext(ctx).CopyFolder(to, ids)
+}
+
 func NewFolderService(ds model.FolderStore) model.FolderService {
 	return &folderService{ds}
 }

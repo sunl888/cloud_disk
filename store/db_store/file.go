@@ -10,15 +10,39 @@ type dbFile struct {
 	db *gorm.DB
 }
 
+func (f *dbFile) CopyFile(toId int64, fileIds []int64) (err error) {
+	type FolderFile struct {
+		FolderId int64
+		FileId   int64
+	}
+	for _, fileId := range fileIds {
+		f.db.Table("folder_files").
+			FirstOrCreate(&FolderFile{
+				FolderId: toId,
+				FileId:   fileId,
+			}, "folder_id = ? AND file_id = ?", toId, fileId)
+	}
+	return nil
+}
+
+func (f *dbFile) MoveFile(fromId, toId int64, fileIds []int64) (err error) {
+	err = f.db.Table("folder_files").
+		Where("folder_id = ? AND file_id IN (?)", fromId, fileIds).
+		Update(map[string]interface{}{
+			"folder_id": toId,
+		}).Error
+	return
+}
+
 func (f *dbFile) DeleteFile(ids []int64, folderId int64) (err error) {
-	err = f.db.Exec("DELETE FROM `folder_files` WHERE folder_id = ? AND file_id IN (?)", folderId, ids).Error
+	err = f.db.Exec("DELETE FROM `folder_files` WHERE `folder_id` = ? AND `file_id` IN (?)", folderId, ids).Error
 	return
 }
 
 func (f *dbFile) SaveFileToFolder(file *model.File, folder *model.Folder) (err error) {
 	folders := make([]*model.Folder, 0, 1)
 	folders = append(folders, folder)
-	err = f.db.First(&file, "hash = ?", file.Hash).Error
+	err = f.db.First(&file, "`hash` = ?", file.Hash).Error
 	if gorm.IsRecordNotFoundError(err) {
 		err = errors.RecordNotFound("文件不存在")
 	}

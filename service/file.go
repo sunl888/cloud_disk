@@ -17,6 +17,14 @@ func DeleteFile(ctx context.Context, ids []int64, folderId int64) (err error) {
 	return FromContext(ctx).DeleteFile(ids, folderId)
 }
 
+func MoveFile(ctx context.Context, fromId, toId int64, fileIds []int64) (err error) {
+	return FromContext(ctx).MoveFile(fromId, toId, fileIds)
+}
+
+func CopyFile(ctx context.Context, toId int64, fileIds []int64) (err error) {
+	return FromContext(ctx).CopyFile(toId, fileIds)
+}
+
 func NewFileService(fs model.FileStore) model.FileService {
 	return &fileService{fs}
 }
