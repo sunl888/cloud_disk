@@ -6,7 +6,7 @@ import (
 
 type File struct {
 	Id        int64      `gorm:"primary_key" json:"id"`                 // ID
-	Folders   []*Folder  `gorm:"many2many:folders_file;" json:"-"`      // 仅仅用来作为关联,表示该文件可以被多个目录引用,而不需要显示 所以用 - 忽略
+	Folders   []*Folder  `gorm:"many2many:folder_files;" json:"-"`      // 仅仅用来作为关联,而不需要显示 所以用 - 忽略
 	Filename  string     `gorm:"not null" json:"filename"`              // 文件名称
 	Hash      string     `gorm:"type:varchar(32);not null" json:"hash"` // 文件Hash
 	Format    string     `gorm:"not null" json:"format"`                // 文件MimeType 例如: video/mp4 -> .mp4
@@ -18,17 +18,12 @@ type File struct {
 }
 
 type FileStore interface {
-	//DeleteFile(id int64) error
-	//DeletedFileList(limit, offset int64) (files []*File, count int64, err error)
-	//RecoverFile(id int64) error
-	//ListFile(limit, offset int64) (files []*File, count int64, err error)
-	//IsExistFile(id, userId int64) (isExist bool, err error)
-	//UpdateFile(id int64, file *File) (err error)
-	//BetchDeleteFile(ids []int64) (err error)
+	// 保存文件到指定目录
 	SaveFileToFolder(file *File, folder *Folder) (err error)
+	// 删除文件
+	DeleteFile(ids []int64, folderId int64) (err error)
 }
 
 type FileService interface {
 	FileStore
-	//MoveFile(fromId, toId int64) // 移动文件或者目录到指定的目录下
 }

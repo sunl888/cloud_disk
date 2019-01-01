@@ -80,6 +80,8 @@ func CreateHTTPHandler(s *server.Server) http.Handler {
 		// 指定目录下第一层的资源列表
 		authorized.GET("/folder", folderHandler.LoadFolder)
 		authorized.POST("/folder", folderHandler.CreateFolder)
+		// 删除文件和目录资源 (file_ids, folder_ids)
+		authorized.DELETE("/source", folderHandler.DeleteSource)
 	}
 
 	adminRouter := api.Group("/")

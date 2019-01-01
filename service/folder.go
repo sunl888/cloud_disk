@@ -21,6 +21,10 @@ func ExistFolder(ctx context.Context, userId int64, folderName string) (isExist 
 	return FromContext(ctx).ExistFolder(userId, folderName)
 }
 
+func DeleteFolder(ctx context.Context, ids []int64, userId int64) (err error) {
+	return FromContext(ctx).DeleteFolder(ids, userId)
+}
+
 func NewFolderService(ds model.FolderStore) model.FolderService {
 	return &folderService{ds}
 }

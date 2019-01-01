@@ -10,6 +10,11 @@ type dbFile struct {
 	db *gorm.DB
 }
 
+func (f *dbFile) DeleteFile(ids []int64, folderId int64) (err error) {
+	err = f.db.Exec("DELETE FROM `folder_files` WHERE folder_id = ? AND file_id IN (?)", folderId, ids).Error
+	return
+}
+
 func (f *dbFile) SaveFileToFolder(file *model.File, folder *model.Folder) (err error) {
 	folders := make([]*model.Folder, 0, 1)
 	folders = append(folders, folder)
@@ -20,17 +25,6 @@ func (f *dbFile) SaveFileToFolder(file *model.File, folder *model.Folder) (err e
 	err = f.db.Model(&file).Association("Folders").Append(folder).Error
 	return
 }
-
-//func (f *dbFile) UpdateFile(id int64, file *model.File) (err error) {
-//	err = f.db.Model(model.File{}).
-//		Where("id = ?", id).
-//		Update(&file).
-//		Error
-//	if gorm.IsRecordNotFoundError(err) {
-//		err = errors.RecordNotFound("文件不存在")
-//	}
-//	return
-//}
 
 func NewDBFile(db *gorm.DB) model.FileStore {
 	return &dbFile{db}

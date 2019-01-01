@@ -9,12 +9,12 @@ type fileService struct {
 	model.FileStore
 }
 
-//func UpdateFile(ctx context.Context, id int64, file *model.File) (err error) {
-//	return FromContext(ctx).UpdateFile(id, file)
-//}
-
 func SaveFileToFolder(ctx context.Context, file *model.File, folder *model.Folder) (err error) {
 	return FromContext(ctx).SaveFileToFolder(file, folder)
+}
+
+func DeleteFile(ctx context.Context, ids []int64, folderId int64) (err error) {
+	return FromContext(ctx).DeleteFile(ids, folderId)
 }
 
 func NewFileService(fs model.FileStore) model.FileService {
