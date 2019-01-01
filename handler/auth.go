@@ -43,17 +43,16 @@ func (authHandler) Logout(c *gin.Context) {
 }
 
 func (authHandler) Register(c *gin.Context) {
-	type Req struct {
+	l := struct {
 		Account  string `form:"account" json:"account"`
 		Password string `form:"password" json:"password"`
-	}
-	req := &Req{}
-	if err := c.ShouldBind(req); err != nil {
+	}{}
+	if err := c.ShouldBind(&l); err != nil {
 		_ = c.Error(err)
 		return
 	}
 	// 注册账号
-	userId, err := service.UserRegister(c.Request.Context(), strings.TrimSpace(req.Account), model.CertificateType(0), req.Password)
+	userId, err := service.UserRegister(c.Request.Context(), strings.TrimSpace(l.Account), model.CertificateType(0), l.Password)
 	if err != nil {
 		_ = c.Error(err)
 		return
