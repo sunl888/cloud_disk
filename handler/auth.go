@@ -52,7 +52,20 @@ func (authHandler) Register(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-	_, err := service.UserRegister(c.Request.Context(), strings.TrimSpace(req.Account), model.CertificateType(0), req.Password)
+	// 注册账号
+	userId, err := service.UserRegister(c.Request.Context(), strings.TrimSpace(req.Account), model.CertificateType(0), req.Password)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	// 为新账号添加一个根目录
+	err = service.CreateFolder(c.Request.Context(), &model.Folder{
+		UserId:     userId,
+		Level:      1,
+		ParentId:   0,
+		Key:        "",
+		FolderName: "根目录",
+	})
 	if err != nil {
 		_ = c.Error(err)
 		return
