@@ -9,12 +9,16 @@ type folderService struct {
 	model.FolderStore
 }
 
-func LoadFolder(ctx context.Context, id int64) (folder *model.Folder, err error) {
-	return FromContext(ctx).LoadFolder(id)
+func LoadFolder(ctx context.Context, id, userId int64, isLoadRelated bool) (folder *model.Folder, err error) {
+	return FromContext(ctx).LoadFolder(id, userId, isLoadRelated)
 }
 
-func LoadFolderSesource(ctx context.Context, id int64) (folder *model.Folder, err error) {
-	return FromContext(ctx).LoadFolderSesource(id)
+func CreateFolder(ctx context.Context, folder *model.Folder) (err error) {
+	return FromContext(ctx).CreateFolder(folder)
+}
+
+func ExistFolder(ctx context.Context, userId int64, folderName string) (isExist bool) {
+	return FromContext(ctx).ExistFolder(userId, folderName)
 }
 
 func NewFolderService(ds model.FolderStore) model.FolderService {

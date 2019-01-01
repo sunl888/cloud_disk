@@ -78,7 +78,8 @@ func CreateHTTPHandler(s *server.Server) http.Handler {
 	{
 		authorized.POST("/upload_file", uploadFileHandler.UploadFile)
 		// 指定目录下第一层的资源列表
-		authorized.GET("/folder/:id", folderHandler.LoadFolderSesource)
+		authorized.GET("/folder", folderHandler.LoadFolder)
+		authorized.POST("/folder", folderHandler.CreateFolder)
 	}
 
 	adminRouter := api.Group("/")

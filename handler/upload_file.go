@@ -44,12 +44,12 @@ func (uf *uploadFile) UploadFile(c *gin.Context) {
 		_ = c.Error(errors.BadRequest("请指定上传的文件夹", nil))
 		return
 	}
-	folder, err := service.LoadFolder(c.Request.Context(), l.FolderId)
+	authId := middleware.UserId(c)
+	folder, err := service.LoadFolder(c.Request.Context(), l.FolderId, authId, false)
 	if err != nil {
 		_ = c.Error(err)
 		return
 	}
-	authId := middleware.UserId(c)
 	if authId != folder.UserId {
 		_ = c.Error(errors.Unauthorized("没有访问权限"))
 		return
