@@ -7,4 +7,5 @@ jobs:
     working_directory: ~
     steps:
       - checkout
+      - run: docker login --username=1972324624@qq.com -p="coder1019;" registry.cn-hangzhou.aliyuncs.com
       - run: make docker_upload
