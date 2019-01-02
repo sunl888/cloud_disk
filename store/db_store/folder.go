@@ -137,13 +137,12 @@ func (f *dbFolder) MoveFolder(to *model.Folder, ids []int64) (err error) {
 
 func (f *dbFolder) DeleteFolder(ids []int64, userId int64) (err error) {
 	var (
-		parentFolder     model.Folder
-		conditions       string
 		waitDelFolderIds []int64
 	)
 	for _, v := range ids {
-		conditions = fmt.Sprintf("id = %d AND user_id = %d", v, userId)
-		err := f.db.First(&parentFolder, conditions).Error
+		relativeRootFolder := model.Folder{}
+		conditions := fmt.Sprintf("id = %d AND user_id = %d", v, userId)
+		err := f.db.First(&relativeRootFolder, conditions).Error
 		if err != nil {
 			if gorm.IsRecordNotFoundError(err) {
 				continue
@@ -151,19 +150,17 @@ func (f *dbFolder) DeleteFolder(ids []int64, userId int64) (err error) {
 			return err
 		}
 		// 将父目录的 ID 放到待删除的目录列表, 准备删除该目录下面的文件
-		waitDelFolderIds = append(waitDelFolderIds, parentFolder.Id)
-		// 删除父目录
-		f.db.Delete(&parentFolder)
+		waitDelFolderIds = append(waitDelFolderIds, relativeRootFolder.Id)
 		// 在数据库中列出所有子目录 ID
-		id2String := strconv.FormatInt(parentFolder.Id, 10)
+		id2Str := strconv.FormatInt(relativeRootFolder.Id, 10)
 		f.db.Model(model.Folder{}).
-			Where("`key` LIKE ?", parentFolder.Key+id2String+"-%").
+			Where("`key` LIKE ?", relativeRootFolder.Key+id2Str+"-%").
 			Pluck("id", &waitDelFolderIds)
-		// 删除父目录下面的所有子目录
-		f.db.Delete(&model.Folder{}, "id IN (?)", waitDelFolderIds)
-		// 删除父目录下面所有子目录中的文件
-		f.db.Exec("DELETE FROM `folder_files` WHERE folder_id IN (?)", waitDelFolderIds)
 	}
+	// 删除父目录以及下面的所有子目录
+	f.db.Delete(&model.Folder{}, "id IN (?)", waitDelFolderIds)
+	// 删除父目录下面所有子目录中的文件
+	f.db.Exec("DELETE FROM `folder_files` WHERE folder_id IN (?)", waitDelFolderIds)
 	return nil
 }
 
