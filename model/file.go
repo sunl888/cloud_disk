@@ -19,13 +19,10 @@ type File struct {
 type FileStore interface {
 	// 保存文件到指定目录
 	SaveFileToFolder(file *File, folder *Folder) (err error)
-
 	// 删除文件
 	DeleteFile(ids []int64, folderId int64) (err error)
-
 	// 移动文件
 	MoveFile(fromId, toId int64, fileIds []int64) (err error)
-
 	// 复制文件
 	CopyFile(toId int64, fileIds []int64) (err error)
 }

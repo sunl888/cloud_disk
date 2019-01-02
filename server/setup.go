@@ -13,7 +13,7 @@ import (
 	"github.com/wq1019/cloud_disk/pkg/pubsub"
 	"github.com/wq1019/cloud_disk/service"
 	"github.com/zm-dev/go-file-uploader"
-	file_uploader_minio "github.com/zm-dev/go-file-uploader/minio"
+	fileUploaderMinio "github.com/zm-dev/go-file-uploader/minio"
 	"go.uber.org/zap"
 	"log"
 	"os"
@@ -33,7 +33,6 @@ func setupGorm(debug bool, databaseConfig *config.DatabaseConfig) *gorm.DB {
 			databaseConfig.DBName,
 		)
 	}
-
 	var (
 		db  *gorm.DB
 		err error
@@ -89,7 +88,7 @@ func setupFilesystem(fsConfig *config.FilesystemConfig) afero.Fs {
 }
 
 func setupFileUploader(s *Server) go_file_uploader.Uploader {
-	return file_uploader_minio.NewMinioUploader(
+	return fileUploaderMinio.NewMinioUploader(
 		go_file_uploader.HashFunc(go_file_uploader.MD5HashFunc),
 		setupMinio(s),
 		setupFileStore(s),
