@@ -33,6 +33,10 @@ func CopyFolder(ctx context.Context, to *model.Folder, ids []int64) (err error) 
 	return FromContext(ctx).CopyFolder(to, ids)
 }
 
+func RenameFolder(ctx context.Context, id int64, newName string) (err error) {
+	return FromContext(ctx).RenameFolder(id, newName)
+}
+
 func NewFolderService(ds model.FolderStore) model.FolderService {
 	return &folderService{ds}
 }

@@ -6,7 +6,6 @@ import (
 
 type File struct {
 	Id        int64     `gorm:"primary_key" json:"id"`                 // ID
-	Folders   []*Folder `gorm:"many2many:folder_files;" json:"-"`      // 仅仅用来作为关联,而不需要显示 所以用 - 忽略
 	Filename  string    `gorm:"not null" json:"filename"`              // 文件名称
 	Hash      string    `gorm:"type:varchar(32);not null" json:"hash"` // 文件Hash
 	Format    string    `gorm:"not null" json:"format"`                // 文件MimeType 例如: video/mp4 -> .mp4
@@ -25,6 +24,8 @@ type FileStore interface {
 	MoveFile(fromId, toId int64, fileIds []int64) (err error)
 	// 复制文件
 	CopyFile(toId int64, fileIds []int64) (err error)
+	// 重命名文件
+	RenameFile(folderId, fileId int64, newName string) (err error)
 }
 
 type FileService interface {

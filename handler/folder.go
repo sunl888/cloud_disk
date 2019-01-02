@@ -10,7 +10,29 @@ import (
 	"strconv"
 )
 
-type folderHandler struct {
+type folderHandler struct{}
+
+func (*folderHandler) RenameFolder(c *gin.Context) {
+	l := struct {
+		FolderId int64  `json:"folder_id" form:"folder_id"`
+		NewName  string `json:"new_name" form:"new_name"`
+	}{}
+	if err := c.ShouldBind(&l); err != nil {
+		_ = c.Error(err)
+		return
+	}
+	authId := middleware.UserId(c)
+	folder, err := service.LoadFolder(c.Request.Context(), l.FolderId, authId, false)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	err = service.RenameFolder(c.Request.Context(), folder.Id, l.NewName)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	c.Status(http.StatusNoContent)
 }
 
 func (*folderHandler) LoadFolder(c *gin.Context) {
@@ -217,6 +239,6 @@ func (*folderHandler) Copy2Folder(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-func NewFolder() *folderHandler {
+func NewFolderHandler() *folderHandler {
 	return &folderHandler{}
 }

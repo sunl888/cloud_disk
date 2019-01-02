@@ -102,6 +102,6 @@ func convert2FileModel(upload *go_file_uploader.FileModel) *model.File {
 	}
 }
 
-func NewUploadFile(u go_file_uploader.Uploader) *uploadFile {
+func NewUploadFileHandler(u go_file_uploader.Uploader) *uploadFile {
 	return &uploadFile{u: u}
 }

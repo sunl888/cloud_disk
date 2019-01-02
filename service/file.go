@@ -25,6 +25,9 @@ func CopyFile(ctx context.Context, toId int64, fileIds []int64) (err error) {
 	return FromContext(ctx).CopyFile(toId, fileIds)
 }
 
+func RenameFile(ctx context.Context, folderId, fileId int64, newName string) (err error) {
+	return FromContext(ctx).RenameFile(folderId, fileId, newName)
+}
 func NewFileService(fs model.FileStore) model.FileService {
 	return &fileService{fs}
 }

@@ -13,30 +13,12 @@ type dbFolder struct {
 	db *gorm.DB
 }
 
-func updateKey(parentKey, key, startId string) string {
-	keys := strings.Split(key, "-")
-	for index, key := range keys {
-		if key == startId {
-			return parentKey + strings.Join(keys[index:], "-")
-		}
-	}
-	return ""
-}
-
-func replaceKey(idMap map[int64]int64, parentKey, key, startId string) string {
-	newKey := updateKey(parentKey, key, startId)
-	if newKey == "" {
-		return ""
-	}
-	keys := strings.Split(key, "-")
-	for index, key := range keys {
-		key2Int64, _ := strconv.ParseInt(key, 10, 64)
-		if newId, ok := idMap[key2Int64]; ok {
-			id2Str := strconv.FormatInt(newId, 10)
-			keys[index] = id2Str
-		}
-	}
-	return strings.Join(keys, "-")
+func (f *dbFolder) RenameFolder(id int64, newName string) (err error) {
+	err = f.db.Model(model.Folder{}).
+		Where("id = ?", id).
+		Update("folder_name", newName).
+		Error
+	return
 }
 
 func (f *dbFolder) CopyFolder(to *model.Folder, ids []int64) (err error) {
@@ -208,11 +190,19 @@ func (f *dbFolder) CreateFolder(folder *model.Folder) (err error) {
 }
 
 func (f *dbFolder) LoadFolder(id, userId int64, isLoadRelated bool) (folder *model.Folder, err error) {
+	var (
+		files []*model.File
+	)
 	folder = &model.Folder{}
+	files = make([]*model.File, 0, 1)
 	q := f.db.Model(model.Folder{})
 	if isLoadRelated {
-		q = q.Preload("Files").
-			Preload("Folders", "user_id = ?", userId)
+		f.db.Table("folders fo").
+			Select("f.id, ff.filename, f.hash, f.format, f.extra, f.size, f.created_at, f.updated_at").
+			Joins("INNER JOIN `folder_files` ff ON ff.folder_id = fo.id").
+			Joins("INNER JOIN `files` f ON f.id = ff.file_id").
+			Where("fo.id = ?", id).Find(&files)
+		q = q.Preload("Folders", "user_id = ?", userId) // 此语句是在 #232 行时才执行的
 	}
 	q = q.Where("user_id = ?", userId)
 	// 如果没有传目录id表示加载根目录
@@ -222,13 +212,40 @@ func (f *dbFolder) LoadFolder(id, userId int64, isLoadRelated bool) (folder *mod
 		q = q.Where("id = ?", id)
 	}
 	err = q.First(&folder).Error
-	if folder.Files == nil {
-		folder.Files = make([]*model.File, 0, 1)
+	if err != nil {
+		if gorm.IsRecordNotFoundError(err) {
+			err = errors.RecordNotFound("目录不存在")
+		}
+		return nil, err
 	}
-	if gorm.IsRecordNotFoundError(err) {
-		err = errors.RecordNotFound("目录不存在")
-	}
+	folder.Files = files
 	return
+}
+
+func updateKey(parentKey, key, startId string) string {
+	keys := strings.Split(key, "-")
+	for index, key := range keys {
+		if key == startId {
+			return parentKey + strings.Join(keys[index:], "-")
+		}
+	}
+	return ""
+}
+
+func replaceKey(idMap map[int64]int64, parentKey, key, startId string) string {
+	newKey := updateKey(parentKey, key, startId)
+	if newKey == "" {
+		return ""
+	}
+	keys := strings.Split(key, "-")
+	for index, key := range keys {
+		key2Int64, _ := strconv.ParseInt(key, 10, 64)
+		if newId, ok := idMap[key2Int64]; ok {
+			id2Str := strconv.FormatInt(newId, 10)
+			keys[index] = id2Str
+		}
+	}
+	return strings.Join(keys, "-")
 }
 
 func NewDBFolder(db *gorm.DB) model.FolderStore {

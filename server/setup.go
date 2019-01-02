@@ -64,6 +64,7 @@ func autoMigrate(db *gorm.DB) {
 		&model.Group{},
 		&model.Share{},
 		&model.Folder{},
+		&model.FolderFile{},
 	).Error
 	if err != nil {
 		log.Fatalf("AutoMigrate 失败！ error: %+v", err)
