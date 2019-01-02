@@ -34,32 +34,32 @@ paths:
   /file/rename:
     put:
       consumes:
-        - application/json
-        - multipart/form-data
+      - application/json
+      - multipart/form-data
       description: 通过文件 ID 重命名文件
       operationId: rename-file
       parameters:
-        - description: 文件 ID
-          format: uint64
-          in: query
-          name: file_id
-          required: true
-          type: integer
-        - description: 文件所属的目录 ID
-          format: uint64
-          in: query
-          name: folder_id
-          required: true
-          type: integer
-        - description: 新的文件名
-          format: string
-          in: query
-          name: new_name
-          required: true
-          type: string
+      - description: 文件 ID
+        format: uint64
+        in: query
+        name: file_id
+        required: true
+        type: integer
+      - description: 文件所属的目录 ID
+        format: uint64
+        in: query
+        name: folder_id
+        required: true
+        type: integer
+      - description: 新的文件名
+        format: string
+        in: query
+        name: new_name
+        required: true
+        type: string
       produces:
-        - application/json
-        - multipart/form-data
+      - application/json
+      - multipart/form-data
       responses:
         "204": {}
         "404":
@@ -74,5 +74,5 @@ paths:
             type: object
       summary: 重命名文件
       tags:
-        - 文件
+      - 文件
 swagger: "2.0"

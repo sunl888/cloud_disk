@@ -1,0 +1,10 @@
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: wqer/docker-go-ubuntu:latest
+    working_directory: ~
+    steps:
+      - checkout
+      - run: make docker_upload
