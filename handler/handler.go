@@ -10,44 +10,6 @@ import (
 	"strconv"
 )
 
-func getInt32LimitAndOffset(c *gin.Context) (limit, offset int32) {
-	var err error
-	limitI64, err := strconv.ParseInt(c.Query("limit"), 10, 32)
-	if err != nil {
-		limit = 10
-	} else {
-		limit = int32(limitI64)
-	}
-	if limit > 50 {
-		limit = 50
-	}
-
-	offsetI64, err := strconv.ParseInt(c.Query("offset"), 10, 32)
-	if err != nil {
-		offset = 0
-	} else {
-		offset = int32(offsetI64)
-	}
-	return limit, offset
-}
-
-func getInt64LimitAndOffset(c *gin.Context) (limit, offset int64) {
-	var err error
-	limit, err = strconv.ParseInt(c.Query("limit"), 10, 32)
-	if err != nil {
-		limit = 10
-	}
-	if limit > 50 {
-		limit = 50
-	}
-
-	offset, err = strconv.ParseInt(c.Query("offset"), 10, 32)
-	if err != nil {
-		offset = 0
-	}
-	return limit, offset
-}
-
 func CreateHTTPHandler(s *server.Server) http.Handler {
 	authHandler := NewAuthHandler()
 	meHandler := NewMeHandler()
@@ -105,4 +67,42 @@ func CreateHTTPHandler(s *server.Server) http.Handler {
 	// 文档
 	api.GET("/doc/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	return router
+}
+
+func getInt32LimitAndOffset(c *gin.Context) (limit, offset int32) {
+	var err error
+	limitI64, err := strconv.ParseInt(c.Query("limit"), 10, 32)
+	if err != nil {
+		limit = 10
+	} else {
+		limit = int32(limitI64)
+	}
+	if limit > 50 {
+		limit = 50
+	}
+
+	offsetI64, err := strconv.ParseInt(c.Query("offset"), 10, 32)
+	if err != nil {
+		offset = 0
+	} else {
+		offset = int32(offsetI64)
+	}
+	return limit, offset
+}
+
+func getInt64LimitAndOffset(c *gin.Context) (limit, offset int64) {
+	var err error
+	limit, err = strconv.ParseInt(c.Query("limit"), 10, 32)
+	if err != nil {
+		limit = 10
+	}
+	if limit > 50 {
+		limit = 50
+	}
+
+	offset, err = strconv.ParseInt(c.Query("offset"), 10, 32)
+	if err != nil {
+		offset = 0
+	}
+	return limit, offset
 }

@@ -30,7 +30,7 @@
           "multipart/form-data"
         ],
         "tags": [
-          "file"
+          "文件"
         ],
         "summary": "重命名文件",
         "operationId": "rename-file",

@@ -74,5 +74,5 @@ paths:
             type: object
       summary: 重命名文件
       tags:
-        - file
+        - 文件
 swagger: "2.0"

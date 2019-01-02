@@ -7,11 +7,10 @@ import (
 	"net/http"
 )
 
-type fileHandler struct {
-}
+type fileHandler struct{}
 
 // RenameFile godoc
-// @Tags file
+// @Tags 文件
 // @Summary 重命名文件
 // @Description 通过文件 ID 重命名文件
 // @ID rename-file
