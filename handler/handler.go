@@ -2,6 +2,8 @@ package handler
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/swaggo/gin-swagger"
+	"github.com/swaggo/gin-swagger/swaggerFiles"
 	"github.com/wq1019/cloud_disk/handler/middleware"
 	"github.com/wq1019/cloud_disk/server"
 	"net/http"
@@ -100,5 +102,7 @@ func CreateHTTPHandler(s *server.Server) http.Handler {
 	adminRouter.Use(middleware.AuthMiddleware, middleware.AdminMiddleware)
 	{
 	}
+	// 文档
+	api.GET("/doc/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	return router
 }

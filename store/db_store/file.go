@@ -15,6 +15,9 @@ func (f *dbFile) RenameFile(folderId, fileId int64, newName string) (err error) 
 		Where("folder_id = ? AND file_id = ?", folderId, fileId).
 		Update("filename", newName).
 		Error
+	if gorm.IsRecordNotFoundError(err) {
+		err = errors.RecordNotFound("文件不存在")
+	}
 	return err
 }
 

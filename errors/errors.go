@@ -4,9 +4,17 @@ import (
 	"github.com/zm-dev/gerrors"
 )
 
+// Swagger API documents need this structure.
+type GlobalError struct {
+	Code        int    `json:"code" example:"10001"`
+	ServiceName string `json:"service_name" example:"cloud_disk"`
+	Message     string `json:"message" example:"文件不存在"`
+	InnerErr    error  `json:"inner_err"`
+	StatusCode  int    `json:"status_code" example:"500"`
+}
+
 // 参数绑定出错
 func BindError(err error) error {
-	// todo 处理422
 	return gerrors.BadRequest(10001, err.Error(), err)
 }
 

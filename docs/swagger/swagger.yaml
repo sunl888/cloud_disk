@@ -1,0 +1,78 @@
+basePath: /api
+definitions:
+  errors.GlobalError:
+    properties:
+      code:
+        example: 10001
+        type: integer
+      inner_err:
+        type: error
+      message:
+        example: 文件不存在
+        type: string
+      service_name:
+        example: cloud_disk
+        type: string
+      status_code:
+        example: 500
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: 2013855675@qq.com
+    name: API Support
+    url: https://github.com/wq1019
+  description: 云盘的 Api 服务.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: https://github.com/zm-dev
+  title: 云盘 Api 服务
+  version: "1.0"
+paths:
+  /file/rename:
+    put:
+      consumes:
+        - application/json
+        - multipart/form-data
+      description: 通过文件 ID 重命名文件
+      operationId: rename-file
+      parameters:
+        - description: 文件 ID
+          format: uint64
+          in: query
+          name: file_id
+          required: true
+          type: integer
+        - description: 文件所属的目录 ID
+          format: uint64
+          in: query
+          name: folder_id
+          required: true
+          type: integer
+        - description: 新的文件名
+          format: string
+          in: query
+          name: new_name
+          required: true
+          type: string
+      produces:
+        - application/json
+        - multipart/form-data
+      responses:
+        "204": {}
+        "404":
+          description: 文件不存在" | "目录不存在
+          schema:
+            $ref: '#/definitions/errors.GlobalError'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.GlobalError'
+            type: object
+      summary: 重命名文件
+      tags:
+        - file
+swagger: "2.0"

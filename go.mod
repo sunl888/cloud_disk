@@ -7,6 +7,8 @@ require (
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gin-contrib/sse v0.0.0-20170109093832-22d885f9ecc7 // indirect
 	github.com/gin-gonic/gin v1.3.0
+	github.com/go-openapi/jsonreference v0.18.0 // indirect
+	github.com/go-openapi/spec v0.18.0 // indirect
 	github.com/go-redis/redis v6.15.0+incompatible
 	github.com/go-sql-driver/mysql v1.4.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
@@ -24,6 +26,8 @@ require (
 	github.com/rs/cors v1.6.0
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/afero v1.2.0
+	github.com/swaggo/gin-swagger v1.0.0
+	github.com/swaggo/swag v1.4.0
 	github.com/ugorji/go/codec v0.0.0-20181209151446-772ced7fd4c2 // indirect
 	github.com/urfave/cli v1.20.0
 	github.com/vmihailenco/msgpack v4.0.1+incompatible
@@ -34,6 +38,7 @@ require (
 	go.uber.org/zap v1.9.1
 	golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9
 	golang.org/x/sys v0.0.0-20181228144115-9a3f9b0469bb // indirect
+	golang.org/x/tools v0.0.0-20181221235234-d00ac6d27372 // indirect
 	google.golang.org/appengine v1.4.0 // indirect
 	gopkg.in/go-playground/validator.v8 v8.18.2 // indirect
 	gopkg.in/yaml.v2 v2.2.2 // indirect

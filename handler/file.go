@@ -10,6 +10,20 @@ import (
 type fileHandler struct {
 }
 
+// RenameFile godoc
+// @Tags file
+// @Summary 重命名文件
+// @Description 通过文件 ID 重命名文件
+// @ID rename-file
+// @Accept json,multipart/form-data
+// @Produce json,multipart/form-data
+// @Param file_id query uint64 true "文件 ID" Format(uint64)
+// @Param folder_id query uint64 true "文件所属的目录 ID" Format(uint64)
+// @Param new_name query string true "新的文件名" Format(string)
+// @Success 204
+// @Failure 404 {object} errors.GlobalError "文件不存在" | "目录不存在"
+// @Failure 500 {object} errors.GlobalError
+// @Router /file/rename [PUT]
 func (*fileHandler) RenameFile(c *gin.Context) {
 	l := struct {
 		FileId   int64  `json:"file_id" form:"file_id"`

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
+	"unicode"
 )
 
 func main() {
@@ -19,10 +20,12 @@ func main() {
 
 	fmt.Println(replaceKey(idMap, newStartKey, key, startKey))
 
-	sql := "INSERT INTO `folder_files` VALUES (1,2),(2,2),(3,2),"
+	//sql := "INSERT INTO `folder_files` VALUES (1,2),(2,2),(3,2),"
+	//
+	//sql = strings.TrimRight(sql, ",")
+	//fmt.Println(sql)
 
-	sql = strings.TrimRight(sql, ",")
-	fmt.Println(sql)
+	fmt.Println(toSnakeCase("HelloWorld"))
 }
 
 func updateKey(parentKey, key, startId string) string {
@@ -48,4 +51,18 @@ func replaceKey(idMap map[string]string, parentKey, key, startId string) string 
 		}
 	}
 	return strings.Join(keys, "-")
+}
+
+func toSnakeCase(in string) string {
+	runes := []rune(in)
+	length := len(runes)
+
+	var out []rune
+	for i := 0; i < length; i++ {
+		if i > 0 && unicode.IsUpper(runes[i]) && ((i+1 < length && unicode.IsLower(runes[i+1])) || unicode.IsLower(runes[i-1])) {
+			out = append(out, '_')
+		}
+		out = append(out, unicode.ToLower(runes[i]))
+	}
+	return string(out)
 }
