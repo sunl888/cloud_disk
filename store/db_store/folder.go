@@ -114,17 +114,17 @@ func (f *dbFolder) MoveFolder(to *model.Folder, ids []int64) (err error) {
 			return err
 		}
 		// 查询所有子目录
-		f.db.Model(model.Folder{}).Where("`key` LIKE ?", rootFolder.Key+id2Str+"-%").Find(children)
+		f.db.Model(model.Folder{}).Where("`key` LIKE ?", rootFolder.Key+id2Str+"-%").Find(&children)
 
 		tmpFolder = rootFolder
 		// 更新根目录的信息
-		f.db.Model(rootFolder).Updates(model.Folder{
+		f.db.Model(&rootFolder).Updates(model.Folder{
 			Level:    to.Level + 1,
 			ParentId: to.Id,
 			Key:      to.Key + toId2Str + model.FolderKeyPrefix,
 		})
 		for _, child := range children {
-			f.db.Model(child).Updates(model.Folder{
+			f.db.Model(&child).Updates(model.Folder{
 				Level: rootFolder.Level + (child.Level - tmpFolder.Level),
 				Key:   updateKey(rootFolder.Key, child.Key, id2Str),
 			})
@@ -134,9 +134,6 @@ func (f *dbFolder) MoveFolder(to *model.Folder, ids []int64) (err error) {
 	}
 	return nil
 }
-
-// 查找d的所有子孙节点: select * from table_name where `key` like "${d.key}${d.id}-%"
-// 查找子节点: select * from table_name where `key` like "${d.key}${d.id}-%" and level=${d.level}+1
 
 func (f *dbFolder) DeleteFolder(ids []int64, userId int64) (err error) {
 	var (
