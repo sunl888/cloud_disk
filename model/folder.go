@@ -4,13 +4,13 @@ import "time"
 
 type Folder struct {
 	Id         int64     `gorm:"primary_key" json:"id"`              // ID
-	Files      []*File   `json:"files"`                              // many2many
-	Folders    []*Folder `gorm:"foreignkey:ParentId" json:"folders"` // one2many 当前目录下的目录
-	UserId     int64     `gorm:"index:user_id" json:"user_id"`       // 创建者
 	FolderName string    `json:"folder_name"`                        // 目录名称
 	ParentId   int64     `gorm:"default:0" json:"parent_id"`         // 父目录
+	UserId     int64     `gorm:"index:user_id" json:"user_id"`       // 创建者
 	Key        string    `gorm:"default:''" json:"key"`              // 辅助键
 	Level      int64     `gorm:"default:1" json:"level"`             // 辅助键
+	Files      []*File   `json:"files"`                              // many2many
+	Folders    []*Folder `gorm:"foreignkey:ParentId" json:"folders"` // one2many 当前目录下的目录
 	CreatedAt  time.Time `json:"created_at"`                         // 创建时间
 	UpdatedAt  time.Time `json:"updated_at"`                         // 更新时间
 }

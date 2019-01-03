@@ -12,6 +12,19 @@ import (
 
 type folderHandler struct{}
 
+// RenameFolder godoc
+// @Tags 目录
+// @Summary 重命名目录
+// @Description 通过目录 ID 重命名目录
+// @ID rename-folder
+// @Accept json,multipart/form-data
+// @Produce json,multipart/form-data
+// @Param folder_id query uint64 true "所属的目录 ID" Format(uint64)
+// @Param new_name query string true "新的目录名" Format(string)
+// @Success 204
+// @Failure 404 {object} errors.GlobalError "目录不存在"
+// @Failure 500 {object} errors.GlobalError
+// @Router /folder/rename [PUT]
 func (*folderHandler) RenameFolder(c *gin.Context) {
 	l := struct {
 		FolderId int64  `json:"folder_id" form:"folder_id"`
@@ -35,6 +48,18 @@ func (*folderHandler) RenameFolder(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+// LoadFolder godoc
+// @Tags 目录
+// @Summary 加载指定的目录及子目录和文件列表
+// @Description 加载指定的目录及子目录和文件列表
+// @ID load-folder
+// @Accept json,multipart/form-data
+// @Produce json,multipart/form-data
+// @Param folder_id query uint64 true "目录 ID" Format(uint64)
+// @Success 200 {object} model.Folder
+// @Failure 404 {object} errors.GlobalError "目录不存在 | 没有访问权限 | id 格式不正确"
+// @Failure 500 {object} errors.GlobalError
+// @Router /folder [GET]
 func (*folderHandler) LoadFolder(c *gin.Context) {
 	l := struct {
 		FolderId int64 `json:"folder_id" form:"folder_id"`
@@ -56,6 +81,20 @@ func (*folderHandler) LoadFolder(c *gin.Context) {
 	c.JSON(200, folder)
 }
 
+// CreateFolder godoc
+// @Tags 目录
+// @Summary 创建一个目录
+// @Description 创建一个目录
+// @ID create-folder
+// @Accept json,multipart/form-data
+// @Produce json,multipart/form-data
+// @Param parent_id query uint64 true "父级目录的 ID" Format(uint64)
+// @Param folder_name query string true "新目录的名称" Format(string)
+// @Success 201 {object} model.Folder
+// @Failure 404 {object} errors.GlobalError "目录名称不能为空 | (父)目录不存在 | 目录已经存在"
+// @Success 401 {object} errors.GlobalError "请先登录"
+// @Failure 500 {object} errors.GlobalError
+// @Router /folder [POST]
 func (*folderHandler) CreateFolder(c *gin.Context) {
 	l := struct {
 		ParentId   int64  `json:"parent_id" form:"parent_id"`
@@ -75,11 +114,6 @@ func (*folderHandler) CreateFolder(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-	// 通过 userID 和 ID 组合查询,因此这里不用判断了
-	//if authId != parentFolder.UserId {
-	//	_ = c.Error(errors.Unauthorized("没有访问权限"))
-	//	return
-	//}
 	isExist := service.ExistFolder(c.Request.Context(), authId, l.ParentId, l.FolderName)
 	if isExist {
 		_ = c.Error(errors.BadRequest("目录已经存在"))
@@ -101,6 +135,21 @@ func (*folderHandler) CreateFolder(c *gin.Context) {
 	c.JSON(http.StatusCreated, folder)
 }
 
+// DeleteSource godoc
+// @Tags 资源
+// @Summary 批量删除资源(文件/目录)
+// @Description 批量删除资源(文件/目录)
+// @ID delete-source
+// @Accept json
+// @Produce json
+// @Param current_folder_id query uint64 true "当前目录的 ID"
+// @Param file_ids query array false "要删除的文件 ids"
+// @Param folder_ids query array false "要删除的目录 ids"
+// @Success 204
+// @Failure 404 {object} errors.GlobalError "请指定要删除的文件或者目录ID | 当前目录不存在"
+// @Success 401 {object} errors.GlobalError "请先登录"
+// @Failure 500 {object} errors.GlobalError
+// @Router /folder [DELETE]
 func (*folderHandler) DeleteSource(c *gin.Context) {
 	l := struct {
 		FileIds         []int64 `json:"file_ids" form:"file_ids"`

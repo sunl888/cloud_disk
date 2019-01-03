@@ -20,7 +20,7 @@ type fileHandler struct{}
 // @Param folder_id query uint64 true "文件所属的目录 ID" Format(uint64)
 // @Param new_name query string true "新的文件名" Format(string)
 // @Success 204
-// @Failure 404 {object} errors.GlobalError "文件不存在" | "目录不存在"
+// @Failure 404 {object} errors.GlobalError "文件不存在 | 目录不存在"
 // @Failure 500 {object} errors.GlobalError
 // @Router /file/rename [PUT]
 func (*fileHandler) RenameFile(c *gin.Context) {

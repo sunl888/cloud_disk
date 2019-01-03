@@ -1,5 +1,5 @@
 doc:
-	swag init -g cmd/server/main.go
+	swag init -g cmd/server/main.go -s ./../trash/docs
 docker:
 	docker build -t cloud-disk:latest -f Dockerfile.server .
 	docker build -t cloud-disk_worker:latest -f Dockerfile.worker .

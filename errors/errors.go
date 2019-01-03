@@ -8,7 +8,7 @@ import (
 type GlobalError struct {
 	Code        int    `json:"code" example:"10001"`
 	ServiceName string `json:"service_name" example:"cloud_disk"`
-	Message     string `json:"message" example:"文件不存在"`
+	Message     string `json:"message" example:"error message"`
 	InnerErr    error  `json:"inner_err"`
 	StatusCode  int    `json:"status_code" example:"500"`
 }
