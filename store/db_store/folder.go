@@ -161,7 +161,7 @@ func (f *dbFolder) DeleteFolder(ids []int64, userId int64) (err error) {
 		Where(likeSql).
 		Pluck("DISTINCT id", &waitDelFolderIds)
 	// 删除父目录以及下面的所有子目录
-	f.db.Delete(&model.Folder{}, likeSql)
+	f.db.Delete(&model.Folder{}, "id IN (?)", waitDelFolderIds)
 	// 删除父目录下面所有子目录中的文件
 	f.db.Exec("DELETE FROM `folder_files` WHERE folder_id IN (?)", waitDelFolderIds)
 	return nil
