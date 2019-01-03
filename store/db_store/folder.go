@@ -167,12 +167,12 @@ func (f *dbFolder) DeleteFolder(ids []int64, userId int64) (err error) {
 	return nil
 }
 
-func (f *dbFolder) ExistFolder(userId int64, folderName string) (isExist bool) {
+func (f *dbFolder) ExistFolder(userId, parentId int64, folderName string) (isExist bool) {
 	var (
 		count uint8
 	)
 	f.db.Model(model.Folder{}).
-		Where("user_id = ? AND folder_name = ?", userId, folderName).
+		Where("user_id = ? AND folder_name = ? AND parent_id = ?", userId, folderName, parentId).
 		Limit(1).
 		Count(&count)
 	if count > 0 {

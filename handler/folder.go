@@ -80,7 +80,7 @@ func (*folderHandler) CreateFolder(c *gin.Context) {
 	//	_ = c.Error(errors.Unauthorized("没有访问权限"))
 	//	return
 	//}
-	isExist := service.ExistFolder(c.Request.Context(), authId, l.FolderName)
+	isExist := service.ExistFolder(c.Request.Context(), authId, l.ParentId, l.FolderName)
 	if isExist {
 		_ = c.Error(errors.BadRequest("目录已经存在"))
 		return

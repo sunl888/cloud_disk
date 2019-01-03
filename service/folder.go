@@ -17,8 +17,8 @@ func CreateFolder(ctx context.Context, folder *model.Folder) (err error) {
 	return FromContext(ctx).CreateFolder(folder)
 }
 
-func ExistFolder(ctx context.Context, userId int64, folderName string) (isExist bool) {
-	return FromContext(ctx).ExistFolder(userId, folderName)
+func ExistFolder(ctx context.Context, userId, parentId int64, folderName string) (isExist bool) {
+	return FromContext(ctx).ExistFolder(userId, parentId, folderName)
 }
 
 func DeleteFolder(ctx context.Context, ids []int64, userId int64) (err error) {
