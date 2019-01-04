@@ -5,14 +5,14 @@ import (
 )
 
 type File struct {
-	Id        int64     `gorm:"primary_key" json:"id"`                 // ID
-	Filename  string    `gorm:"not null" json:"filename"`              // 文件名称
-	Hash      string    `gorm:"type:varchar(32);not null" json:"hash"` // 文件Hash
-	Format    string    `gorm:"not null" json:"format"`                // 文件MimeType 例如: video/mp4 -> .mp4
-	Extra     string    `json:"extra" gorm:"not null;type:text"`       // extra
-	Size      int64     `gorm:"type:bigint" json:"size"`               // 文件大小
-	CreatedAt time.Time `json:"created_at"`                            // 创建时间
-	UpdatedAt time.Time `json:"updated_at"`                            // 更新时间
+	Id        int64     `gorm:"type:BIGINT;AUTO_INCREMENT;PRIMARY_KEY" json:"id"` // ID
+	Filename  string    `gorm:"type:BIGINT; NOT NULL" json:"filename"`            // 文件名称
+	Hash      string    `gorm:"type:varchar(32);NOT NULL" json:"hash"`            // 文件Hash
+	Format    string    `gorm:"NOT NULL" json:"format"`                           // 文件MimeType 例如: video/mp4 -> .mp4
+	Extra     string    `gorm:"NOT NULL;type:TEXT" json:"extra"`                  // extra
+	Size      int64     `gorm:"type:BIGINT" json:"size"`                          // 文件大小
+	CreatedAt time.Time `json:"created_at"`                                       // 创建时间
+	UpdatedAt time.Time `json:"updated_at"`                                       // 更新时间
 }
 
 type FileStore interface {
