@@ -26,6 +26,8 @@ type FileStore interface {
 	CopyFile(toId int64, fileIds []int64) (err error)
 	// 重命名文件
 	RenameFile(folderId, fileId int64, newName string) (err error)
+	// 加载文件
+	LoadFile(folderId, fileId, userId int64) (file *File, err error)
 }
 
 type FileService interface {

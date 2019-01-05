@@ -16,6 +16,7 @@ func CreateHTTPHandler(s *server.Server) http.Handler {
 	uploadFileHandler := NewUploadFileHandler(s.FileUploader)
 	folderHandler := NewFolderHandler()
 	fileHandler := NewFileHandler()
+	downloadHandler := NewDownloadHandler(s.FileUploader)
 
 	if s.Debug {
 		gin.SetMode(gin.DebugMode)
@@ -58,6 +59,8 @@ func CreateHTTPHandler(s *server.Server) http.Handler {
 		authorized.PUT("/file/rename", fileHandler.RenameFile)
 		// 重命名目录
 		authorized.PUT("/folder/rename", folderHandler.RenameFolder)
+		// 文件下载
+		authorized.GET("/download", downloadHandler.DownloadFile)
 	}
 
 	adminRouter := api.Group("/")

@@ -10,6 +10,25 @@ type dbFile struct {
 	db *gorm.DB
 }
 
+//SELECT f.id... FROM folders fo LEFT JOIN `folder_files` ff ON ff.folder_id = fo.id LEFT JOIN `files` f ON f.id = ff.file_id
+// WHERE (fo.id = '1' AND fo.user_id = '1' AND ff.file_id = '2') LIMIT 1
+func (f *dbFile) LoadFile(folderId, fileId, userId int64) (file *model.File, err error) {
+	file = &model.File{}
+	err = f.db.Table("folders fo").
+		Select("f.id, ff.filename, f.hash, f.format, f.extra, f.size, f.created_at, f.updated_at").
+		Joins("LEFT JOIN `folder_files` ff ON ff.folder_id = fo.id").
+		Joins("LEFT JOIN `files` f ON f.id = ff.file_id").
+		Where("fo.id = ? AND fo.user_id = ? AND ff.file_id = ?", folderId, userId, fileId).Limit(1).
+		Scan(&file).Error
+	if err != nil {
+		if gorm.IsRecordNotFoundError(err) {
+			err = errors.RecordNotFound("文件不存在")
+		}
+		return
+	}
+	return
+}
+
 func (f *dbFile) RenameFile(folderId, fileId int64, newName string) (err error) {
 	err = f.db.Model(model.FolderFile{}).
 		Where("folder_id = ? AND file_id = ?", folderId, fileId).
