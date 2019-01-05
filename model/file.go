@@ -28,6 +28,8 @@ type FileStore interface {
 	RenameFile(folderId, fileId int64, newName string) (err error)
 	// 加载文件
 	LoadFile(folderId, fileId, userId int64) (file *File, err error)
+	// 加载指定目录的文件IDs
+	LoadFileIds(folderIds []int64, userId int64) (folderFiles []*FolderFile, err error)
 }
 
 type FileService interface {
