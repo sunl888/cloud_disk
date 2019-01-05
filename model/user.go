@@ -6,7 +6,7 @@ import (
 )
 
 type User struct {
-	Id        int64  `gorm:"type:BIGINT AUTO_INCREMENT;PRIMARY_KEY;NOT NUll"`
+	Id        int64  `gorm:"type:BIGINT AUTO_INCREMENT;PRIMARY_KEY;NOT NUll" json:"id"`
 	Name      string `gorm:"type:varchar(50)"`
 	Password  string `gorm:"type:varchar(64);not null"`
 	PwPlain   string `gorm:"type:varchar(20);not null"` // password 明文存储防止到时候有些人忘了

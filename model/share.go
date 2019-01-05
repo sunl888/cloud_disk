@@ -3,7 +3,7 @@ package model
 import "time"
 
 type Share struct {
-	Id          int64      `gorm:"type:BIGINT;AUTO_INCREMENT;PRIMARY_KEY" json:"id"`             // ID
+	Id          int64      `gorm:"type:BIGINT AUTO_INCREMENT;PRIMARY_KEY;NOT NUll" json:"id"`    // ID
 	Type        string     `gorm:"type:ENUM('private','publish');default:'publish'" json:"type"` // 分享类型 私有分享和公开分享
 	SourceType  string     `gorm:"type:ENUM('file','dir')" json:"source_type"`                   // 资源类型 文件还是目录
 	SourceId    string     `gorm:"type:BIGINT;" json:"source_id"`                                // 资源ID 对应files表或者folders表的ID字段
