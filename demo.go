@@ -26,9 +26,14 @@ func main() {
 	//fmt.Println(sql)
 
 	fmt.Println(toSnakeCase("HelloWorld"))
-	fmt.Println(2<<10<<10<<10,1024*1024*1024*2)
-	fmt.Println(2147483648>>20)
+
+	fmt.Println(DefaultAllowSize, SilverAllowSize)
 }
+
+const (
+	DefaultAllowSize = 5 << 30
+	SilverAllowSize  = 5 << 40
+)
 
 func updateKey(parentKey, key, startId string) string {
 	keys := strings.Split(key, "-")
