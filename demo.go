@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
+	"time"
 	"unicode"
 )
 
@@ -26,6 +27,8 @@ func main() {
 	//fmt.Println(sql)
 
 	fmt.Println(toSnakeCase("HelloWorld"))
+	fmt.Println(2<<10<<10<<10,1024*1024*1024*2)
+	fmt.Println(time.Now().UnixNano())
 }
 
 func updateKey(parentKey, key, startId string) string {
@@ -45,7 +48,6 @@ func replaceKey(idMap map[string]string, parentKey, key, startId string) string 
 	}
 	keys := strings.Split(key, "-")
 	for index, key := range keys {
-		fmt.Println(idMap[key])
 		if newId, ok := idMap[key]; ok {
 			keys[index] = newId
 		}
