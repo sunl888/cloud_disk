@@ -40,6 +40,7 @@ type FileData struct {
 }
 
 // 批量打包下载文件
+// http://localhost:8080/api/download?file_ids[]=3&folder_ids[]=3&folder_ids[]=5&current_folder_id=2&file_ids[]=1
 func downloadMultiple(c *gin.Context, u uploader.Uploader, userId, currentFolderId int64, folderFiles []*model.FolderFile) (err error) {
 	var (
 		size       int64
@@ -64,7 +65,6 @@ func downloadMultiple(c *gin.Context, u uploader.Uploader, userId, currentFolder
 			Key:      v.Key,
 		}
 	}
-
 	// 查找所有文件的详细信息
 	for _, v := range folderFiles {
 		file, err := service.LoadFile(c.Request.Context(), v.FolderId, v.FileId, userId)
