@@ -28,17 +28,26 @@ type FolderData struct {
 	Key      string
 }
 
+type FileData struct {
+	Id       int64
+	FolderId int64
+	Filename string
+	Hash     string
+	Size     int64
+}
+
 // 批量打包下载文件
-func downloadMultiple(c *gin.Context, u uploader.Uploader, userId, currentFolderId int64, ffs []*model.FolderFile) (err error) {
+func downloadMultiple(c *gin.Context, u uploader.Uploader, userId, currentFolderId int64, folderFiles []*model.FolderFile) (err error) {
 	var (
 		size       int64
 		count      int64
 		folderIds  = make([]int64, 0, 5)
 		folderMaps = make(map[int64]FolderData, 10)
+		fileLists  = make([]*FileData, 10)
 	)
 	// 查找每个文件所在目录的信息
 	folderIds = append(folderIds, currentFolderId)
-	for _, v := range ffs {
+	for _, v := range folderFiles {
 		folderIds = append(folderIds, v.FolderId)
 	}
 	folders, err := service.ListFolder(c.Request.Context(), folderIds, userId)
@@ -52,12 +61,9 @@ func downloadMultiple(c *gin.Context, u uploader.Uploader, userId, currentFolder
 			Key:      v.Key,
 		}
 	}
-	// 准备向 Response 流中写入 Zip 文件
-	c.Writer.Header().Add("Content-Disposition", "attachment;filename=批量下载.zip")
-	w := zip.NewWriter(c.Writer)
-	defer w.Close()
-	// 查找每个文件的详细信息并写入 Zip 文件
-	for _, v := range ffs {
+
+	// 查找所有文件的详细信息
+	for _, v := range folderFiles {
 		file, err := service.LoadFile(c.Request.Context(), v.FolderId, v.FileId, userId)
 		if err != nil {
 			return err
@@ -69,15 +75,29 @@ func downloadMultiple(c *gin.Context, u uploader.Uploader, userId, currentFolder
 		} else if size > MaxSize {
 			return errors.BadRequest(fmt.Sprintf("文件总大小超过%dByte，不允许下载", MaxSize))
 		}
+		fileLists = append(fileLists, &FileData{
+			Id:       v.FileId,
+			FolderId: v.FolderId,
+			Filename: file.Filename,
+			Hash:     file.Hash,
+			Size:     file.Size,
+		})
+	}
+
+	// 将文件全部写入 Zip 文件流中
+	c.Writer.Header().Add("Content-Disposition", "attachment;filename=批量下载.zip")
+	w := zip.NewWriter(c.Writer)
+	defer w.Close()
+	for _, file := range fileLists {
 		rFile, err := u.ReadFile(file.Hash)
 		if err != nil {
 			return err
 		}
-		path := generatePath(folderMaps, currentFolderId, folderMaps[v.FolderId].Key, v.FolderId)
-		//fmt.Println(fmt.Sprintf("folder:%d,path:%s,filename:%s\n", v.FolderId, path, file.Filename))
+		path := generatePath(folderMaps, currentFolderId, folderMaps[file.FolderId].Key, file.FolderId)
 		err = compress(rFile, path, w, file.Filename)
 		rFile.Close()
 	}
+
 	return nil
 }
 
