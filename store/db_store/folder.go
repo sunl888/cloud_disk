@@ -2,6 +2,7 @@ package db_store
 
 import (
 	"fmt"
+	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/jinzhu/gorm"
 	"github.com/wq1019/cloud_disk/errors"
 	"github.com/wq1019/cloud_disk/model"
@@ -11,6 +12,23 @@ import (
 
 type dbFolder struct {
 	db *gorm.DB
+}
+
+func (f *dbFolder) ListFolder(folderIds []int64, userId int64) (folders []*model.Folder, err error) {
+	// 去重
+	ids := hashset.New()
+	for _, v := range folderIds {
+		ids.Add(v)
+	}
+	if ids.Size() <= 0 {
+		return nil, errors.RecordNotFound("没有目录")
+	}
+	folders = make([]*model.Folder, 10)
+	err = f.db.Model(&model.Folder{}).
+		Where("user_id = ? AND id IN (?)", userId, ids.Values()).
+		Find(&folders).
+		Error
+	return
 }
 
 func (f *dbFolder) RenameFolder(id int64, newName string) (err error) {

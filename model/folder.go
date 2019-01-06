@@ -34,6 +34,8 @@ type FolderStore interface {
 	CopyFolder(to *Folder, ids []int64) (err error)
 	// 重命名目录
 	RenameFolder(id int64, newName string) (err error)
+
+	ListFolder(folderIds []int64, userId int64) (folder []*Folder, err error)
 }
 
 type FolderService interface {

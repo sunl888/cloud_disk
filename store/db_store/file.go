@@ -13,7 +13,7 @@ type dbFile struct {
 	db *gorm.DB
 }
 
-func (f *dbFile) LoadFileIds(folderIds []int64, userId int64) (folderFiles []*model.FolderFile, err error) {
+func (f *dbFile) LoadFilesByFolderIds(folderIds []int64, userId int64) (folderFiles []*model.FolderFile, err error) {
 	var (
 		allFolderId []int64
 		likeSql     string
@@ -44,7 +44,7 @@ func (f *dbFile) LoadFileIds(folderIds []int64, userId int64) (folderFiles []*mo
 		Where("folder_id IN (?)", allFolderId).
 		Find(&folderFiles)
 
-	return nil, err
+	return folderFiles, err
 }
 
 //SELECT f.id... FROM folders fo LEFT JOIN `folder_files` ff ON ff.folder_id = fo.id LEFT JOIN `files` f ON f.id = ff.file_id

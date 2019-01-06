@@ -9,6 +9,10 @@ type folderService struct {
 	model.FolderStore
 }
 
+func ListFolder(ctx context.Context, folderIds []int64, userId int64) (folder []*model.Folder, err error) {
+	return FromContext(ctx).ListFolder(folderIds, userId)
+}
+
 func LoadFolder(ctx context.Context, id, userId int64, isLoadRelated bool) (folder *model.Folder, err error) {
 	return FromContext(ctx).LoadFolder(id, userId, isLoadRelated)
 }
