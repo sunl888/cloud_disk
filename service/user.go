@@ -40,7 +40,11 @@ func (uSvc *userService) UserRegister(account string, certificateType model.Cert
 	} else if exist {
 		return 0, errors.ErrAccountAlreadyExisted()
 	}
-	user := &model.User{Password: uSvc.h.Make(password), PwPlain: password}
+	user := &model.User{
+		Name:     account,
+		Password: uSvc.h.Make(password),
+		PwPlain:  password,
+	}
 	if err := uSvc.UserStore.UserCreate(user); err != nil {
 		return 0, err
 	}
