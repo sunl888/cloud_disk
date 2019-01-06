@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"strings"
-	"time"
 	"unicode"
 )
 
@@ -28,7 +27,7 @@ func main() {
 
 	fmt.Println(toSnakeCase("HelloWorld"))
 	fmt.Println(2<<10<<10<<10,1024*1024*1024*2)
-	fmt.Println(time.Now().UnixNano())
+	fmt.Println(2147483648>>20)
 }
 
 func updateKey(parentKey, key, startId string) string {

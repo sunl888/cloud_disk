@@ -19,8 +19,11 @@ type downloadHandler struct {
 }
 
 const (
-	MaxCount = 1000    // 最大 1000 个文件
-	MaxSize  = 2 << 30 // 1024*1024*1024*2 = 2^31 = 2GB = 2147483648Byte
+	MaxCount    = 1000 // 最大 1000 个文件
+	MaxSizeGB   = 2    // 最多允许下载2GB
+	MaxSizeMB   = MaxSizeGB << 10
+	MaxSizeKB   = MaxSizeMB << 10
+	MaxSizeByte = MaxSizeKB << 10
 )
 
 type FolderData struct {
@@ -72,8 +75,8 @@ func downloadMultiple(c *gin.Context, u uploader.Uploader, userId, currentFolder
 		size += file.Size
 		if count > MaxCount {
 			return errors.BadRequest(fmt.Sprintf("文件数量超过%d个，不允许下载", MaxCount))
-		} else if size > MaxSize {
-			return errors.BadRequest(fmt.Sprintf("文件总大小超过%dByte，不允许下载", MaxSize))
+		} else if size > MaxSizeByte {
+			return errors.BadRequest(fmt.Sprintf("文件总大小超过%dGB，不允许下载", MaxSizeGB))
 		}
 		fileLists = append(fileLists, &FileData{
 			Id:       v.FileId,
