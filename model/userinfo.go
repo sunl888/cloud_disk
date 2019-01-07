@@ -18,6 +18,7 @@ type UserInfo struct {
 
 type UserInfoStore interface {
 	CreateUserInfo(userInfo *UserInfo) (err error)
+	LoadUserInfo(userId int64) (userInfo *UserInfo, err error)
 }
 
 type UserInfoService interface {

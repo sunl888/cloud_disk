@@ -34,12 +34,16 @@ type FilesystemConfig struct {
 }
 
 type MinioConfig struct {
-	ExternalNetworkHost string `json:"externalnetworkhost"`
-	Host                string `json:"host"`
-	AccessKey           string `json:"accesskey"`
-	SecretKey           string `json:"secretkey"`
-	SSL                 string `json:"ssl"`
-	BucketName          string `json:"bucketname"`
+	Host       string `json:"host"`
+	AccessKey  string `json:"accesskey"`
+	SecretKey  string `json:"secretkey"`
+	SSL        string `json:"ssl"`
+	BucketName string `json:"bucketname"`
+}
+
+type ImageproxyConfig struct {
+	Host        string
+	OmitBaseUrl bool `json:"omitbaseurl"`
 }
 
 type Config struct {
@@ -53,6 +57,7 @@ type Config struct {
 	Redis        RedisConfig      `json:"redis"`
 	Ticket       TicketConfig     `json:"ticket"`
 	Minio        MinioConfig      `json:"minio"`
+	Imageproxy   ImageproxyConfig
 }
 
 func LoadConfig(filepath string) *Config {

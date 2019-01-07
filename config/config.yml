@@ -34,3 +34,7 @@ minio:
   secretkey: "xxx"
   ssl: "false"
   bucketname: "xxx"
+
+imageproxy:
+  host: "xxx"
+  omitbaseurl: true

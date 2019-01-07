@@ -70,6 +70,10 @@ func UserLoad(ctx context.Context, id int64) (*model.User, error) {
 	return FromContext(ctx).UserLoad(id)
 }
 
+func UserLoadAndRelated(ctx context.Context, id int64) (*model.User, error) {
+	return FromContext(ctx).UserLoadAndRelated(id)
+}
+
 func UserCreate(ctx context.Context, user *model.User) error {
 	return FromContext(ctx).UserCreate(user)
 }

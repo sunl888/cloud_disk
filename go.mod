@@ -34,6 +34,7 @@ require (
 	github.com/vmihailenco/msgpack v4.0.1+incompatible
 	github.com/zm-dev/gerrors v0.0.4
 	github.com/zm-dev/go-file-uploader v0.2.13
+	github.com/zm-dev/go-image_uploader v0.5.4
 	go.uber.org/atomic v1.3.2 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.9.1

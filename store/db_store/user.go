@@ -2,11 +2,36 @@ package db_store
 
 import (
 	"github.com/jinzhu/gorm"
+	"github.com/wq1019/cloud_disk/errors"
 	"github.com/wq1019/cloud_disk/model"
 )
 
 type dbUser struct {
 	db *gorm.DB
+}
+
+func (u *dbUser) UserLoadAndRelated(userId int64) (user *model.User, err error) {
+	if userId <= 0 {
+		return nil, model.ErrUserNotExist
+	}
+	user = &model.User{}
+	err = u.db.Where("id = ?", userId).First(&user).Error
+	if gorm.IsRecordNotFoundError(err) {
+		err = model.ErrUserNotExist
+	}
+	info := &model.UserInfo{}
+	err = u.db.Where("user_id = ?", user.Id).First(&info).Error
+	if gorm.IsRecordNotFoundError(err) {
+		err = errors.RecordNotFound("用户详细信息不存在")
+	}
+	user.UserInfo = info
+	group := &model.Group{}
+	err = u.db.Where("id = ?", user.UserInfo.GroupId).First(&group).Error
+	if gorm.IsRecordNotFoundError(err) {
+		err = errors.RecordNotFound("用户组不存在")
+	}
+	user.Group = group
+	return
 }
 
 func (u *dbUser) UserExist(id int64) (bool, error) {

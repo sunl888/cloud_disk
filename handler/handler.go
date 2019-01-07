@@ -12,8 +12,9 @@ import (
 
 func CreateHTTPHandler(s *server.Server) http.Handler {
 	authHandler := NewAuthHandler()
-	meHandler := NewMeHandler()
+	meHandler := NewMeHandler(s.ImageUrl)
 	uploadFileHandler := NewUploadFileHandler(s.FileUploader)
+	uploadImageHandler := NewUploadImage(s.ImageUploader, s.ImageUrl)
 	folderHandler := NewFolderHandler()
 	fileHandler := NewFileHandler()
 	downloadHandler := NewDownloadHandler(s.FileUploader)
@@ -30,27 +31,26 @@ func CreateHTTPHandler(s *server.Server) http.Handler {
 	api := router.Group("/api")
 
 	authRouter := api.Group("/auth")
-	// 注册
 	authRouter.POST("/register", authHandler.Register)
-	// 登录
 	authRouter.POST("/login", authHandler.Login)
-	{
-		authRouter.GET("/logout", authHandler.Logout).Use(middleware.AuthMiddleware)
-		authRouter.GET("/me", meHandler.Show).Use(middleware.AuthMiddleware)
-	}
 
 	authorized := api.Group("/")
 	authorized.Use(middleware.AuthMiddleware)
 	{
+		// Me
+		authorized.GET("/auth/me", meHandler.Show)
+		// 退出登录
+		authorized.GET("/auth/logout", authHandler.Logout)
 		// 上传文件
 		authorized.POST("/upload_file", uploadFileHandler.UploadFile)
+		// 上传图片
+		authorized.POST("/upload_image", uploadImageHandler.UploadImage)
 		// 指定目录下第一层的资源列表
 		authorized.GET("/folder", folderHandler.LoadFolder)
 		// 创建目录
 		authorized.POST("/folder", folderHandler.CreateFolder)
-		// 删除文件和目录资源 (file_ids, folder_ids)
+		// 删除文件和目录资源
 		authorized.DELETE("/source", folderHandler.DeleteSource)
-		// TODO 如何避免往子目录移动,怎样复制到当前目录(未完成)
 		// 移动到指定目录
 		authorized.PUT("/source/move", folderHandler.Move2Folder)
 		// 复制到指定目录
