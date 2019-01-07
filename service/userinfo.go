@@ -9,12 +9,8 @@ type userInfoService struct {
 	model.UserInfoStore
 }
 
-func CreateUserInfo(ctx context.Context, userInfo *model.UserInfo) (err error) {
-	return FromContext(ctx).CreateUserInfo(userInfo)
-}
-
-func LoadUserInfo(ctx context.Context, uid int64) (*model.UserInfo, error) {
-	return FromContext(ctx).LoadUserInfo(uid)
+func UpdateUsedStorage(ctx context.Context, uid, usedStorage int64) error {
+	return FromContext(ctx).UpdateUsedStorage(uid, usedStorage)
 }
 
 func NewUserInfoService(ss model.UserInfoStore) model.UserInfoService {

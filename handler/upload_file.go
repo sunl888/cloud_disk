@@ -7,28 +7,12 @@ import (
 	"github.com/wq1019/cloud_disk/model"
 	"github.com/wq1019/cloud_disk/service"
 	"github.com/zm-dev/go-file-uploader"
-	"io"
-	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
 )
 
 type uploadFile struct {
 	u go_file_uploader.Uploader
-}
-
-func copy2TmpFile(file io.Reader) (tmpFileName string, err error) {
-	tmpFile, err := ioutil.TempFile("", "cloud-")
-	_, err = io.Copy(tmpFile, file)
-	if cerr := tmpFile.Close(); err == nil {
-		err = cerr
-	}
-	if err != nil {
-		_ = os.Remove(tmpFile.Name())
-		return
-	}
-	return tmpFile.Name(), nil
 }
 
 func (uf *uploadFile) UploadFile(c *gin.Context) {
@@ -75,27 +59,11 @@ func (uf *uploadFile) UploadFile(c *gin.Context) {
 		return
 	}
 	defer uploadFile.Close()
-	tmpFileName, err := copy2TmpFile(uploadFile)
-	if err != nil {
-		_ = c.Error(err)
-		// 还原最新已用容量
-		err = service.UpdateUsedStorage(c.Request.Context(), authId, auth.UserInfo.UsedStorage)
-		if err != nil {
-			_ = c.Error(err)
-			return
-		}
-		return
-	}
-	defer os.Remove(tmpFileName)
 	uFile, err := uf.u.Upload(go_file_uploader.FileHeader{Filename: fh.Filename, Size: fh.Size, File: uploadFile}, "")
 	if err != nil {
 		_ = c.Error(errors.InternalServerError("上传失败", err))
 		// 还原最新已用容量
-		err = service.UpdateUsedStorage(c.Request.Context(), authId, auth.UserInfo.UsedStorage)
-		if err != nil {
-			_ = c.Error(err)
-			return
-		}
+		_ = service.UpdateUsedStorage(c.Request.Context(), authId, auth.UserInfo.UsedStorage)
 		return
 	}
 	fileModel := convert2FileModel(uFile)

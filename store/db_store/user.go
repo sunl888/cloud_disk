@@ -66,8 +66,9 @@ func (u *dbUser) UserUpdate(userId int64, data map[string]interface{}) error {
 	return u.db.Model(model.User{Id: userId}).Select("name", "student_num", "password", "pw_plain", "class_name", "is_admin").Updates(data).Error
 }
 
-func (u *dbUser) UserCreate(user *model.User) error {
-	return u.db.Create(user).Error
+func (u *dbUser) UserCreate(user *model.User) (err error) {
+	err = u.db.Create(&user).Error
+	return
 }
 
 func (u *dbUser) UserListByUserIds(userIds []interface{}) (users []*model.User, err error) {
