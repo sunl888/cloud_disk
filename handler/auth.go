@@ -69,13 +69,6 @@ func (authHandler) Register(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-	err = service.CreateUserInfo(c.Request.Context(), &model.UserInfo{
-		UserId:   userId,
-		Nickname: l.Account,
-		Profile:  "这货很懒,什么都没有说哦",
-		IsBan:    false,
-		GroupId:  1,
-	})
 	c.Status(201)
 }
 

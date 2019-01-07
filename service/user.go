@@ -44,6 +44,12 @@ func (uSvc *userService) UserRegister(account string, certificateType model.Cert
 		Name:     account,
 		Password: uSvc.h.Make(password),
 		PwPlain:  password,
+		UserInfo: &model.UserInfo{
+			Nickname: account,
+			Profile:  "这货很懒,什么都没有说哦",
+			IsBan:    false,
+			GroupId:  1,
+		},
 	}
 	if err := uSvc.UserStore.UserCreate(user); err != nil {
 		return 0, err

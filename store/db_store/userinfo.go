@@ -9,6 +9,17 @@ type dbUserInfo struct {
 	db *gorm.DB
 }
 
+func (u *dbUserInfo) UpdateUsedStorage(userId, usedStorage int64) (err error) {
+	if userId <= 0 {
+		return model.ErrUserNotExist
+	}
+	err = u.db.Model(model.UserInfo{}).
+		Where("user_id = ?", userId).
+		Update("used_storage", usedStorage).
+		Error
+	return
+}
+
 func (u *dbUserInfo) LoadUserInfo(userId int64) (userInfo *model.UserInfo, err error) {
 	if userId <= 0 {
 		return nil, model.ErrUserNotExist
@@ -19,10 +30,6 @@ func (u *dbUserInfo) LoadUserInfo(userId int64) (userInfo *model.UserInfo, err e
 		err = model.ErrUserNotExist
 	}
 	return
-}
-
-func (u *dbUserInfo) CreateUserInfo(userInfo *model.UserInfo) (err error) {
-	return u.db.Create(&userInfo).Error
 }
 
 func NewDBUserInfo(db *gorm.DB) model.UserInfoStore {
