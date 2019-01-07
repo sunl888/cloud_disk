@@ -9,7 +9,6 @@ import (
 	"github.com/zm-dev/go-file-uploader"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -54,21 +53,49 @@ func (uf *uploadFile) UploadFile(c *gin.Context) {
 		_ = c.Error(errors.Unauthorized("没有访问权限"))
 		return
 	}
+	auth, err := service.UserLoadAndRelated(c.Request.Context(), authId)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
 	uploadFile, fh, err := c.Request.FormFile("file")
 	if err != nil {
 		_ = c.Error(errors.BadRequest("请上传文件", err))
 		return
 	}
+	newTotalSize := fh.Size + auth.UserInfo.UsedStorage
+	if newTotalSize > auth.Group.MaxStorage {
+		_ = c.Error(errors.BadRequest("您的空间已经用完啦, 开会员吧", err))
+		return
+	}
+	// 写入最新已用容量
+	err = service.UpdateUsedStorage(c.Request.Context(), authId, newTotalSize)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
 	defer uploadFile.Close()
-
 	tmpFileName, err := copy2TmpFile(uploadFile)
 	if err != nil {
-		defer os.Remove(tmpFileName)
+		_ = c.Error(err)
+		// 还原最新已用容量
+		err = service.UpdateUsedStorage(c.Request.Context(), authId, auth.UserInfo.UsedStorage)
+		if err != nil {
+			_ = c.Error(err)
+			return
+		}
+		return
 	}
+	defer os.Remove(tmpFileName)
 	uFile, err := uf.u.Upload(go_file_uploader.FileHeader{Filename: fh.Filename, Size: fh.Size, File: uploadFile}, "")
 	if err != nil {
-		log.Println(err)
 		_ = c.Error(errors.InternalServerError("上传失败", err))
+		// 还原最新已用容量
+		err = service.UpdateUsedStorage(c.Request.Context(), authId, auth.UserInfo.UsedStorage)
+		if err != nil {
+			_ = c.Error(err)
+			return
+		}
 		return
 	}
 	fileModel := convert2FileModel(uFile)
@@ -77,6 +104,7 @@ func (uf *uploadFile) UploadFile(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
+
 	c.JSON(http.StatusCreated, fileModel)
 }
 
