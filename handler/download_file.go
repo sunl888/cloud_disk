@@ -137,7 +137,7 @@ func (d *downloadHandler) Download(c *gin.Context) {
 		return
 	}
 	var (
-		authId = int64(1)
+		authId = middleware.UserId(c)
 	)
 	file, err := service.LoadFile(c.Request.Context(), l.FolderId, l.FileId, authId)
 	if err != nil {
