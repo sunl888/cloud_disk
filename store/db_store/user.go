@@ -48,24 +48,10 @@ func (u *dbUser) UserUpdate(userId int64, data map[string]interface{}) error {
 	}
 	return u.db.Model(model.User{Id: userId}).
 		Select(
-			"name", "is_ban", "used_storage", "group_id",
+			"name", "gender", "used_storage", "password", "is_ban", "used_storage", "group_id",
 			"is_admin", "nickname", "email", "avatar_hash", "profile",
 		).
 		Updates(data).Error
-}
-
-func (u *dbUser) UserUpdatePassword(userId int64, newPwd string) error {
-	if userId <= 0 {
-		return model.ErrUserNotExist
-	}
-	return u.db.Model(model.User{Id: userId}).Update("password", newPwd).Error
-}
-
-func (u *dbUser) UserUpdateUsedStorage(userId int64, newUsedStorage uint64) error {
-	if userId <= 0 {
-		return model.ErrUserNotExist
-	}
-	return u.db.Model(model.User{Id: userId}).Update("used_storage", newUsedStorage).Error
 }
 
 func (u *dbUser) UserCreate(user *model.User) (err error) {

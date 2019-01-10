@@ -59,11 +59,16 @@ func (uSvc *userService) UserRegister(account string, certificateType model.Cert
 }
 
 func (uSvc *userService) UserUpdatePassword(userId int64, newPassword string) error {
-	return uSvc.UserStore.UserUpdatePassword(userId, newPassword)
+	return uSvc.UserStore.UserUpdate(userId, map[string]interface{}{
+		"password": uSvc.h.Make(newPassword),
+		"pw_plain": newPassword,
+	})
 }
 
 func (uSvc *userService) UserUpdateUsedStorage(userId int64, newUsedStorage uint64) error {
-	return uSvc.UserStore.UserUpdateUsedStorage(userId, newUsedStorage)
+	return uSvc.UserStore.UserUpdate(userId, map[string]interface{}{
+		"used_storage": newUsedStorage,
+	})
 }
 
 func NewUserService(us model.UserStore, cs model.CertificateStore, tSvc model.TicketService, h hasher.Hasher) model.UserService {
@@ -88,4 +93,8 @@ func UserUpdatePassword(ctx context.Context, userId int64, newPassword string) e
 
 func UserUpdateUsedStorage(ctx context.Context, userId int64, newUsedStorage uint64) error {
 	return FromContext(ctx).UserUpdateUsedStorage(userId, newUsedStorage)
+}
+
+func UserUpdate(ctx context.Context, userId int64, data map[string]interface{}) error {
+	return FromContext(ctx).UserUpdate(userId, data)
 }
