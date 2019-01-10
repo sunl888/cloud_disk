@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/wq1019/cloud_disk/pkg/bytesize"
 	"log"
 	"strconv"
 	"strings"
@@ -20,7 +21,7 @@ func main() {
 	path := mergePath(folderMap, 1, key, 4)
 	fmt.Println(path)
 
-	tmp := "bytes=0-"
+	tmp := "bytes=0-1"
 	prefixIndex := strings.Index(tmp, "-")
 	fmt.Println(prefixIndex)
 	start, err := strconv.ParseInt(tmp[6:prefixIndex], 10, 64)
@@ -35,6 +36,8 @@ func main() {
 		return
 	}
 	fmt.Println(start, end)
+
+	fmt.Println(bytesize.ByteSize(20413039))
 }
 
 func mergePath(folderMap map[int64]string, currentId int64, key string, withId int64) (path string) {
