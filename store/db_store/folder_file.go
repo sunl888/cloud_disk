@@ -12,22 +12,23 @@ type dbFolderFile struct {
 	db *gorm.DB
 }
 
-func (f *dbFolderFile) LoadFolderFilesByFolderIdAndFileIds(folderId int64, fileIds []int64, userId int64) (folderFiles []*model.FolderFile, err error) {
-	folderFiles = make([]*model.FolderFile, 0, 10)
+func (f *dbFolderFile) LoadFolderFilesByFolderIdAndFileIds(folderId int64, fileIds []int64, userId int64) (folderFiles []*model.WrapFolderFile, err error) {
+	folderFiles = make([]*model.WrapFolderFile, 0, 10)
 	err = f.db.Table("folders fo").
-		Select("ff.*").
+		Select("ff.*,f.size as file_size").
 		Joins("LEFT JOIN `folder_files` ff ON ff.folder_id = fo.id").
+		Joins("LEFT JOIN `files` f ON ff.file_id = f.id").
 		Where("fo.id = ? AND fo.user_id = ? AND ff.file_id IN (?)", folderId, userId, fileIds).
 		Find(&folderFiles).Error
 	return
 }
 
-func (f *dbFolderFile) LoadFolderFilesByFolderIds(folderIds []int64, userId int64) (folderFiles []*model.FolderFile, err error) {
+func (f *dbFolderFile) LoadFolderFilesByFolderIds(folderIds []int64, userId int64) (folderFiles []*model.WrapFolderFile, err error) {
 	var (
 		allFolderId []int64
 		likeSql     string
 	)
-	folderFiles = make([]*model.FolderFile, 0, 10)
+	folderFiles = make([]*model.WrapFolderFile, 0, 10)
 	for _, v := range folderIds {
 		parent := model.Folder{}
 		conditions := fmt.Sprintf("id = %d AND user_id = %d", v, userId)
@@ -49,8 +50,10 @@ func (f *dbFolderFile) LoadFolderFilesByFolderIds(folderIds []int64, userId int6
 		Where(likeSql).
 		Pluck("DISTINCT id", &allFolderId)
 	// 查找父目录下面所有子目录中的文件ID
-	f.db.Model(model.FolderFile{}).
-		Where("folder_id IN (?)", allFolderId).
+	f.db.Table("folder_files ff").
+		Select("ff.*,f.size as file_size").
+		Joins("LEFT JOIN `files` f ON ff.file_id = f.id").
+		Where("ff.folder_id IN (?)", allFolderId).
 		Find(&folderFiles)
 
 	return folderFiles, err
