@@ -47,23 +47,16 @@ func (uf *uploadFile) UploadFile(c *gin.Context) {
 		_ = c.Error(errors.BadRequest("请上传文件", err))
 		return
 	}
-	newTotalSize := fh.Size + auth.UserInfo.UsedStorage
+	// 计算上传的文件大小是否超过用户可使用的总大小
+	newTotalSize := uint64(fh.Size) + auth.UserInfo.UsedStorage
 	if newTotalSize > auth.Group.MaxStorage {
-		_ = c.Error(errors.BadRequest("您的空间已经用完啦, 开会员吧", err))
-		return
-	}
-	// 写入最新已用容量
-	err = service.UpdateUsedStorage(c.Request.Context(), authId, newTotalSize)
-	if err != nil {
-		_ = c.Error(err)
+		_ = c.Error(errors.BadRequest("您的空间已经用完啦, 快去求求攻城狮大哥吧 ^_^", err))
 		return
 	}
 	defer uploadFile.Close()
 	uFile, err := uf.u.Upload(go_file_uploader.FileHeader{Filename: fh.Filename, Size: fh.Size, File: uploadFile}, "")
 	if err != nil {
 		_ = c.Error(errors.InternalServerError("上传失败", err))
-		// 还原最新已用容量
-		_ = service.UpdateUsedStorage(c.Request.Context(), authId, auth.UserInfo.UsedStorage)
 		return
 	}
 	fileModel := convert2FileModel(uFile)
@@ -72,7 +65,12 @@ func (uf *uploadFile) UploadFile(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-
+	// 更新用户已使用的空间
+	err = service.UpdateUsedStorage(c.Request.Context(), authId, newTotalSize)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
 	c.JSON(http.StatusCreated, fileModel)
 }
 

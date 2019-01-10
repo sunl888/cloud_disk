@@ -46,6 +46,11 @@ func RecordNotFound(message string) error {
 	return gerrors.NotFound(10010, message, nil)
 }
 
+// 文件已存在
+func FileAlreadyExist(err error) error {
+	return gerrors.New(10011, 400, "file already existed", err)
+}
+
 // 没有权限
 func Forbidden(msg string, err ...error) error {
 	return gerrors.Forbidden(10006, msg, err...)

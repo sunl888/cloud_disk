@@ -73,12 +73,25 @@ func (f *dbFile) SaveFileToFolder(file *model.File, folder *model.Folder) (err e
 	if gorm.IsRecordNotFoundError(err) {
 		err = errors.RecordNotFound("文件不存在")
 	}
-	err = f.db.Model(model.FolderFile{}).
-		FirstOrCreate(&model.FolderFile{
-			FolderId: folder.Id,
-			FileId:   file.Id,
-			Filename: file.Filename,
-		}, "folder_id = ? AND file_id = ?", folder.Id, file.Id).Error
+	var (
+		count int8
+	)
+	f.db.Model(model.FolderFile{}).
+		Where("folder_id = ? AND file_id = ?", folder.Id, file.Id).
+		Limit(1).
+		Count(&count)
+
+	// 文件已经存在
+	if count > 0 {
+		return errors.FileAlreadyExist(nil)
+	} else {
+		err = f.db.Model(model.File{}).Create(
+			&model.FolderFile{
+				FolderId: folder.Id,
+				FileId:   file.Id,
+				Filename: file.Filename,
+			}).Error
+	}
 	return
 }
 
