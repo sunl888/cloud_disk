@@ -9,7 +9,7 @@ type dbUserInfo struct {
 	db *gorm.DB
 }
 
-func (u *dbUserInfo) UpdateUsedStorage(userId, usedStorage int64) (err error) {
+func (u *dbUserInfo) UpdateUsedStorage(userId int64, usedStorage uint64) (err error) {
 	if userId <= 0 {
 		return model.ErrUserNotExist
 	}

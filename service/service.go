@@ -22,6 +22,7 @@ type Service interface {
 	model.ShareService
 	model.FolderService
 	model.UserInfoService
+	model.FolderFileService
 }
 
 type service struct {
@@ -33,6 +34,7 @@ type service struct {
 	model.ShareService
 	model.FolderService
 	model.UserInfoService
+	model.FolderFileService
 }
 
 func NewService(db *gorm.DB, redisClient *redis.Client, baseFs afero.Fs, conf *config.Config, pub pubsub.PubQueue) Service {
@@ -54,5 +56,6 @@ func NewService(db *gorm.DB, redisClient *redis.Client, baseFs afero.Fs, conf *c
 		NewShareService(s),
 		NewFolderService(s),
 		NewUserInfoService(s),
+		NewFolderFileService(s),
 	}
 }

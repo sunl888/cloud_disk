@@ -33,10 +33,6 @@ func LoadFile(ctx context.Context, folderId, fileId, userId int64) (file *model.
 	return FromContext(ctx).LoadFile(folderId, fileId, userId)
 }
 
-func LoadFilesByFolderIds(ctx context.Context, folderIds []int64, userId int64) (folderFiles []*model.FolderFile, err error) {
-	return FromContext(ctx).LoadFilesByFolderIds(folderIds, userId)
-}
-
 func NewFileService(fs model.FileStore) model.FileService {
 	return &fileService{fs}
 }

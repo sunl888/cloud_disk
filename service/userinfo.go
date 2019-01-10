@@ -9,7 +9,7 @@ type userInfoService struct {
 	model.UserInfoStore
 }
 
-func UpdateUsedStorage(ctx context.Context, uid, usedStorage int64) error {
+func UpdateUsedStorage(ctx context.Context, uid int64, usedStorage uint64) error {
 	return FromContext(ctx).UpdateUsedStorage(uid, usedStorage)
 }
 

@@ -1,50 +1,13 @@
 package db_store
 
 import (
-	"fmt"
 	"github.com/jinzhu/gorm"
 	"github.com/wq1019/cloud_disk/errors"
 	"github.com/wq1019/cloud_disk/model"
-	"strconv"
-	"strings"
 )
 
 type dbFile struct {
 	db *gorm.DB
-}
-
-func (f *dbFile) LoadFilesByFolderIds(folderIds []int64, userId int64) (folderFiles []*model.FolderFile, err error) {
-	var (
-		allFolderId []int64
-		likeSql     string
-	)
-	folderFiles = make([]*model.FolderFile, 0, 10)
-	for _, v := range folderIds {
-		parent := model.Folder{}
-		conditions := fmt.Sprintf("id = %d AND user_id = %d", v, userId)
-		err := f.db.First(&parent, conditions).Error
-		if err != nil {
-			if gorm.IsRecordNotFoundError(err) {
-				continue
-			}
-			return nil, err
-		}
-		// 将父目录的 ID 放到目录列表
-		allFolderId = append(allFolderId, parent.Id)
-		// 在数据库中列出所有子目录 ID
-		id2Str := strconv.FormatInt(parent.Id, 10)
-		likeSql += fmt.Sprintf(" `key` LIKE %s OR", "'"+parent.Key+id2Str+"-%'")
-	}
-	likeSql = strings.TrimRight(likeSql, "OR")
-	f.db.Model(model.Folder{}).
-		Where(likeSql).
-		Pluck("DISTINCT id", &allFolderId)
-	// 查找父目录下面所有子目录中的文件ID
-	f.db.Model(model.FolderFile{}).
-		Where("folder_id IN (?)", allFolderId).
-		Find(&folderFiles)
-
-	return folderFiles, err
 }
 
 //SELECT f.id... FROM folders fo LEFT JOIN `folder_files` ff ON ff.folder_id = fo.id LEFT JOIN `files` f ON f.id = ff.file_id

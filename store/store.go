@@ -17,6 +17,7 @@ type Store interface {
 	model.FolderStore
 	model.GroupStore
 	model.UserInfoStore
+	model.FolderFileStore
 }
 
 type store struct {
@@ -28,6 +29,7 @@ type store struct {
 	model.FolderStore
 	model.GroupStore
 	model.UserInfoStore
+	model.FolderFileStore
 }
 
 func NewStore(db *gorm.DB, redisClient *redis.Client) Store {
@@ -40,5 +42,6 @@ func NewStore(db *gorm.DB, redisClient *redis.Client) Store {
 		db_store.NewDBFolder(db),
 		db_store.NewDBGroup(db),
 		db_store.NewDBUserInfo(db),
+		db_store.NewDBFolderFile(db),
 	}
 }
