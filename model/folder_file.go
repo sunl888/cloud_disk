@@ -11,6 +11,7 @@ type WrapFolderFile struct {
 	FolderId     int64  `json:"folder_id"`
 	FileSize     int64  `json:"file_size"`
 	Filename     string `json:"filename"`
+	Format       string `json:"format"`
 	RelativePath string `json:"relative_path"`
 }
 

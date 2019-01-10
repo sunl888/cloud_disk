@@ -39,13 +39,15 @@ func (d *downloadHandler) PreDownload(c *gin.Context) {
 		return
 	}
 	var (
+		authId          = middleware.UserId(c)
 		fileIds2Int64   = strArr2Int64Arr(fileIdsReq)
 		folderIds2Int64 = strArr2Int64Arr(folderIdsReq)
-		folderFiles     = make([]*model.WrapFolderFile, 0, 10)
-		authId          = middleware.UserId(c)
+		foldersLen      = len(folderIds2Int64)
+		filesLen        = len(fileIds2Int64)
+		folderFiles     = make([]*model.WrapFolderFile, 0, foldersLen+filesLen)
 	)
 	// 对于用户指定的所有目录下的文件都要查出来并返回
-	if len(folderIds2Int64) > 0 {
+	if foldersLen > 0 {
 		folderFiles, err = service.LoadFolderFilesByFolderIds(c.Request.Context(), folderIds2Int64, authId)
 		if err != nil {
 			_ = c.Error(err)
@@ -56,12 +58,7 @@ func (d *downloadHandler) PreDownload(c *gin.Context) {
 	currentFolderFiles, err := service.LoadFolderFilesByFolderIdAndFileIds(c.Request.Context(), currentFolderId, fileIds2Int64, authId)
 	if len(fileIds2Int64) > 0 {
 		for _, v := range currentFolderFiles {
-			folderFiles = append(folderFiles, &model.WrapFolderFile{
-				FileId:   v.FileId,
-				Filename: v.Filename,
-				FolderId: v.FolderId, // currentFolderId
-				FileSize: v.FileSize,
-			})
+			folderFiles = append(folderFiles, v)
 		}
 	}
 	if len(folderFiles) == 0 {
@@ -71,9 +68,8 @@ func (d *downloadHandler) PreDownload(c *gin.Context) {
 
 	// Wrap Response Data
 	var (
-		folderIds      = make([]int64, 0, 5)
-		folderMaps     = make(map[int64]FolderData, 10)
-		folderFileData = make([]*model.WrapFolderFile, 0, len(folderFiles))
+		folderIds  = make([]int64, 0, 5)
+		folderMaps = make(map[int64]FolderData, 10)
 	)
 	// 查找每个文件所在目录的信息
 	folderIds = append(folderIds, currentFolderId)
@@ -92,17 +88,11 @@ func (d *downloadHandler) PreDownload(c *gin.Context) {
 			Key:      v.Key,
 		}
 	}
-	for _, v := range folderFiles {
-		relativePath := mergePath(folderMaps, currentFolderId, folderMaps[v.FolderId].Key, v.FolderId)
-		folderFileData = append(folderFileData, &model.WrapFolderFile{
-			FileId:       v.FileId,
-			FolderId:     v.FolderId,
-			FileSize:     v.FileSize,
-			Filename:     v.Filename,
-			RelativePath: relativePath,
-		})
+	for i := 0; i < len(folderFiles); i++ {
+		relativePath := mergePath(folderMaps, currentFolderId, folderMaps[folderFiles[i].FolderId].Key, folderFiles[i].FolderId)
+		folderFiles[i].RelativePath = relativePath
 	}
-	c.JSON(http.StatusOK, folderFileData)
+	c.JSON(http.StatusOK, folderFiles)
 }
 
 // 文件下载
@@ -117,10 +107,7 @@ func (d *downloadHandler) Download(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-	var (
-		// TODO authID
-		authId = int64(1) // middleware.UserId(c)
-	)
+	authId := middleware.UserId(c)
 	file, err := service.LoadFile(c.Request.Context(), l.FolderId, l.FileId, authId)
 	if err != nil {
 		_ = c.Error(err)

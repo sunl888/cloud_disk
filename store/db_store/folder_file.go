@@ -15,7 +15,7 @@ type dbFolderFile struct {
 func (f *dbFolderFile) LoadFolderFilesByFolderIdAndFileIds(folderId int64, fileIds []int64, userId int64) (folderFiles []*model.WrapFolderFile, err error) {
 	folderFiles = make([]*model.WrapFolderFile, 0, 10)
 	err = f.db.Table("folders fo").
-		Select("ff.*,f.size as file_size").
+		Select("ff.*,f.size as file_size,f.format as format").
 		Joins("LEFT JOIN `folder_files` ff ON ff.folder_id = fo.id").
 		Joins("LEFT JOIN `files` f ON ff.file_id = f.id").
 		Where("fo.id = ? AND fo.user_id = ? AND ff.file_id IN (?)", folderId, userId, fileIds).
@@ -51,7 +51,7 @@ func (f *dbFolderFile) LoadFolderFilesByFolderIds(folderIds []int64, userId int6
 		Pluck("DISTINCT id", &allFolderId)
 	// 查找父目录下面所有子目录中的文件ID
 	f.db.Table("folder_files ff").
-		Select("ff.*,f.size as file_size").
+		Select("ff.*,f.size as file_size,f.format as format").
 		Joins("LEFT JOIN `files` f ON ff.file_id = f.id").
 		Where("ff.folder_id IN (?)", allFolderId).
 		Find(&folderFiles)
