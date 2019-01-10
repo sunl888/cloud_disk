@@ -44,12 +44,9 @@ func (uSvc *userService) UserRegister(account string, certificateType model.Cert
 		Name:     account,
 		Password: uSvc.h.Make(password),
 		PwPlain:  password,
-		UserInfo: &model.UserInfo{
-			Nickname: account,
-			Profile:  "这货很懒,什么都没有说哦",
-			IsBan:    false,
-			GroupId:  1,
-		},
+		Nickname: account,
+		Profile:  "这货很懒,什么都没有说哦",
+		GroupId:  1,
 	}
 	if err := uSvc.UserStore.UserCreate(user); err != nil {
 		return 0, err
@@ -62,10 +59,11 @@ func (uSvc *userService) UserRegister(account string, certificateType model.Cert
 }
 
 func (uSvc *userService) UserUpdatePassword(userId int64, newPassword string) error {
-	return uSvc.UserStore.UserUpdate(userId, map[string]interface{}{
-		"password": uSvc.h.Make(newPassword),
-		"pw_plain": newPassword,
-	})
+	return uSvc.UserStore.UserUpdatePassword(userId, newPassword)
+}
+
+func (uSvc *userService) UserUpdateUsedStorage(userId int64, newUsedStorage uint64) error {
+	return uSvc.UserStore.UserUpdateUsedStorage(userId, newUsedStorage)
 }
 
 func NewUserService(us model.UserStore, cs model.CertificateStore, tSvc model.TicketService, h hasher.Hasher) model.UserService {
@@ -74,14 +72,6 @@ func NewUserService(us model.UserStore, cs model.CertificateStore, tSvc model.Ti
 
 func UserLoad(ctx context.Context, id int64) (*model.User, error) {
 	return FromContext(ctx).UserLoad(id)
-}
-
-func UserLoadAndRelated(ctx context.Context, id int64) (*model.User, error) {
-	return FromContext(ctx).UserLoadAndRelated(id)
-}
-
-func UserCreate(ctx context.Context, user *model.User) error {
-	return FromContext(ctx).UserCreate(user)
 }
 
 func UserLogin(ctx context.Context, account, password string) (*model.Ticket, error) {
@@ -96,6 +86,6 @@ func UserUpdatePassword(ctx context.Context, userId int64, newPassword string) e
 	return FromContext(ctx).UserUpdatePassword(userId, newPassword)
 }
 
-func UserListByUserIds(ctx context.Context, userIds []interface{}) ([]*model.User, error) {
-	return FromContext(ctx).UserListByUserIds(userIds)
+func UserUpdateUsedStorage(ctx context.Context, userId int64, newUsedStorage uint64) error {
+	return FromContext(ctx).UserUpdateUsedStorage(userId, newUsedStorage)
 }

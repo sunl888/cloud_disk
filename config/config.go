@@ -41,7 +41,7 @@ type MinioConfig struct {
 	BucketName string `json:"bucketname"`
 }
 
-type ImageproxyConfig struct {
+type ImageProxyConfig struct {
 	Host        string
 	OmitBaseUrl bool `json:"omitbaseurl"`
 }
@@ -57,7 +57,7 @@ type Config struct {
 	Redis        RedisConfig      `json:"redis"`
 	Ticket       TicketConfig     `json:"ticket"`
 	Minio        MinioConfig      `json:"minio"`
-	Imageproxy   ImageproxyConfig
+	ImageProxy   ImageProxyConfig `json:"image_proxy"`
 }
 
 func LoadConfig(filepath string) *Config {

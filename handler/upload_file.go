@@ -37,7 +37,7 @@ func (uf *uploadFile) UploadFile(c *gin.Context) {
 		_ = c.Error(errors.Unauthorized("没有访问权限"))
 		return
 	}
-	auth, err := service.UserLoadAndRelated(c.Request.Context(), authId)
+	auth, err := service.UserLoad(c.Request.Context(), authId)
 	if err != nil {
 		_ = c.Error(err)
 		return
@@ -48,7 +48,7 @@ func (uf *uploadFile) UploadFile(c *gin.Context) {
 		return
 	}
 	// 计算上传的文件大小是否超过用户可使用的总大小
-	newTotalSize := uint64(fh.Size) + auth.UserInfo.UsedStorage
+	newTotalSize := uint64(fh.Size) + auth.UsedStorage
 	if newTotalSize > auth.Group.MaxStorage {
 		_ = c.Error(errors.BadRequest("您的空间已经用完啦, 快去求求攻城狮大哥吧 ^_^", err))
 		return
@@ -66,7 +66,7 @@ func (uf *uploadFile) UploadFile(c *gin.Context) {
 		return
 	}
 	// 更新用户已使用的空间
-	err = service.UpdateUsedStorage(c.Request.Context(), authId, newTotalSize)
+	err = service.UserUpdateUsedStorage(c.Request.Context(), authId, newTotalSize)
 	if err != nil {
 		_ = c.Error(err)
 		return

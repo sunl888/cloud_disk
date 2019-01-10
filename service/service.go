@@ -21,7 +21,6 @@ type Service interface {
 	model.GroupService
 	model.ShareService
 	model.FolderService
-	model.UserInfoService
 	model.FolderFileService
 }
 
@@ -33,7 +32,6 @@ type service struct {
 	model.GroupService
 	model.ShareService
 	model.FolderService
-	model.UserInfoService
 	model.FolderFileService
 }
 
@@ -55,7 +53,6 @@ func NewService(db *gorm.DB, redisClient *redis.Client, baseFs afero.Fs, conf *c
 		NewGroupService(s),
 		NewShareService(s),
 		NewFolderService(s),
-		NewUserInfoService(s),
 		NewFolderFileService(s),
 	}
 }

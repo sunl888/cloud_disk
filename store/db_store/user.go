@@ -10,30 +10,6 @@ type dbUser struct {
 	db *gorm.DB
 }
 
-func (u *dbUser) UserLoadAndRelated(userId int64) (user *model.User, err error) {
-	if userId <= 0 {
-		return nil, model.ErrUserNotExist
-	}
-	user = &model.User{}
-	err = u.db.Where("id = ?", userId).First(&user).Error
-	if gorm.IsRecordNotFoundError(err) {
-		err = model.ErrUserNotExist
-	}
-	info := &model.UserInfo{}
-	err = u.db.Where("user_id = ?", user.Id).First(&info).Error
-	if gorm.IsRecordNotFoundError(err) {
-		err = errors.RecordNotFound("用户详细信息不存在")
-	}
-	user.UserInfo = info
-	group := &model.Group{}
-	err = u.db.Where("id = ?", user.UserInfo.GroupId).First(&group).Error
-	if gorm.IsRecordNotFoundError(err) {
-		err = errors.RecordNotFound("用户组不存在")
-	}
-	user.Group = group
-	return
-}
-
 func (u *dbUser) UserExist(id int64) (bool, error) {
 	var count uint8
 	err := u.db.Model(model.User{}).Where(model.User{Id: id}).Count(&count).Error
@@ -56,6 +32,13 @@ func (u *dbUser) UserLoad(id int64) (user *model.User, err error) {
 	if gorm.IsRecordNotFoundError(err) {
 		err = model.ErrUserNotExist
 	}
+
+	group := &model.Group{}
+	err = u.db.Where("id = ?", user.GroupId).First(&group).Error
+	if gorm.IsRecordNotFoundError(err) {
+		err = errors.RecordNotFound("用户组不存在")
+	}
+	user.Group = group
 	return
 }
 
@@ -63,20 +46,30 @@ func (u *dbUser) UserUpdate(userId int64, data map[string]interface{}) error {
 	if userId <= 0 {
 		return model.ErrUserNotExist
 	}
-	return u.db.Model(model.User{Id: userId}).Select("name", "student_num", "password", "pw_plain", "class_name", "is_admin").Updates(data).Error
+	return u.db.Model(model.User{Id: userId}).
+		Select(
+			"name", "is_ban", "used_storage", "group_id",
+			"is_admin", "nickname", "email", "avatar_hash", "profile",
+		).
+		Updates(data).Error
+}
+
+func (u *dbUser) UserUpdatePassword(userId int64, newPwd string) error {
+	if userId <= 0 {
+		return model.ErrUserNotExist
+	}
+	return u.db.Model(model.User{Id: userId}).Update("password", newPwd).Error
+}
+
+func (u *dbUser) UserUpdateUsedStorage(userId int64, newUsedStorage uint64) error {
+	if userId <= 0 {
+		return model.ErrUserNotExist
+	}
+	return u.db.Model(model.User{Id: userId}).Update("used_storage", newUsedStorage).Error
 }
 
 func (u *dbUser) UserCreate(user *model.User) (err error) {
 	err = u.db.Create(&user).Error
-	return
-}
-
-func (u *dbUser) UserListByUserIds(userIds []interface{}) (users []*model.User, err error) {
-	if len(userIds) == 0 {
-		return
-	}
-	users = make([]*model.User, 0, len(userIds))
-	err = u.db.Where("id in (?)", userIds).Find(&users).Error
 	return
 }
 

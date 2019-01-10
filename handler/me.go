@@ -16,7 +16,7 @@ type meHandler struct {
 
 func (m *meHandler) Show(c *gin.Context) {
 	uid := middleware.UserId(c)
-	user, err := service.UserLoadAndRelated(c.Request.Context(), uid)
+	user, err := service.UserLoad(c.Request.Context(), uid)
 	if err != nil {
 		_ = c.Error(err)
 		return
@@ -30,12 +30,12 @@ func convert2UserResp(user *model.User, imageUrl image_url.URL) map[string]inter
 		"name":              user.Name,
 		"created_at":        user.CreatedAt,
 		"updated_at":        user.UpdatedAt,
-		"nickname":          user.UserInfo.Nickname,
-		"avatar_hash":       user.UserInfo.AvatarHash,
-		"avatar_url":        imageUrl.Generate(user.UserInfo.AvatarHash),
-		"profile":           user.UserInfo.Profile,
-		"email":             user.UserInfo.Email,
-		"used_storage":      bytesize.ByteSize(user.UserInfo.UsedStorage),
+		"nickname":          user.Nickname,
+		"avatar_hash":       user.AvatarHash,
+		"avatar_url":        imageUrl.Generate(user.AvatarHash),
+		"profile":           user.Profile,
+		"email":             user.Email,
+		"used_storage":      bytesize.ByteSize(user.UsedStorage),
 		"group_name":        user.Group.Name,
 		"max_allow_storage": bytesize.ByteSize(user.Group.MaxStorage),
 		"is_allow_share":    user.Group.AllowShare,

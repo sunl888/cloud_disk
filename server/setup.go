@@ -60,13 +60,13 @@ func setupGorm(debug bool, databaseConfig *config.DatabaseConfig) *gorm.DB {
 func autoMigrate(db *gorm.DB) {
 	err := db.AutoMigrate(
 		&model.User{},
-		&model.UserInfo{},
 		&model.Certificate{},
 		&model.File{},
 		&model.Group{},
 		&model.Share{},
 		&model.Folder{},
 		&model.FolderFile{},
+		&image_uploader.Image{},
 	).Error
 	if err != nil {
 		log.Fatalf("AutoMigrate 失败！ error: %+v", err)
@@ -168,10 +168,10 @@ func setupImageURL(s *Server) image_url.URL {
 		baseURL = "http://" + s.Conf.Minio.Host
 	}
 	return image_url.NewImageproxyURL(
-		s.Conf.Imageproxy.Host,
+		s.Conf.ImageProxy.Host,
 		baseURL,
 		s.Conf.Minio.BucketName,
-		s.Conf.Imageproxy.OmitBaseUrl,
+		s.Conf.ImageProxy.OmitBaseUrl,
 		image_uploader.Hash2StorageNameFunc(image_uploader.TwoCharsPrefixHash2StorageNameFunc),
 	)
 }
