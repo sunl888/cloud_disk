@@ -1,4 +1,4 @@
-FROM golang:1.11.1-alpine3.7 as builder
+FROM golang:latest as builder
 
 COPY . /go/src/github.com/wq1019/cloud_disk
 
