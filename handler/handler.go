@@ -60,7 +60,10 @@ func CreateHTTPHandler(s *server.Server) http.Handler {
 		// 重命名目录
 		authorized.PUT("/folder/rename", folderHandler.RenameFolder)
 		// 文件下载
-		authorized.GET("/download", downloadHandler.DownloadFile)
+		//authorized.GET("/download", downloadHandler.DownloadFile)
+		authorized.GET("/download", downloadHandler.Download)
+		// 获取要下载的文件和目录的详细信息
+		authorized.GET("/pre_download", downloadHandler.PreDownload)
 	}
 
 	adminRouter := api.Group("/")
