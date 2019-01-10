@@ -1,5 +1,6 @@
 package config
 
+import "C"
 import (
 	"github.com/micro/go-config"
 	"github.com/micro/go-config/source/env"
@@ -43,7 +44,7 @@ type MinioConfig struct {
 
 type ImageProxyConfig struct {
 	Host        string
-	OmitBaseUrl bool `json:"omitbaseurl"`
+	OmitBaseUrl string `json:"omitbaseurl"`
 }
 
 type Config struct {
@@ -57,7 +58,7 @@ type Config struct {
 	Redis        RedisConfig      `json:"redis"`
 	Ticket       TicketConfig     `json:"ticket"`
 	Minio        MinioConfig      `json:"minio"`
-	ImageProxy   ImageProxyConfig `json:"image_proxy"`
+	ImageProxy   ImageProxyConfig `json:"image-proxy"`
 }
 
 func LoadConfig(filepath string) *Config {
