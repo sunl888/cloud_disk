@@ -32,9 +32,9 @@ minio:
   host: "xxx"
   accesskey: "xxx"
   secretkey: "xxx"
-  ssl: false
+  ssl: "false"
   bucketname: "xxx"
 
 image-proxy:
   host: "xxx"
-  omitbaseurl: true
+  omitbaseurl: "true"
