@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/wq1019/cloud_disk/handler/middleware"
 	"github.com/wq1019/cloud_disk/model"
@@ -26,7 +25,6 @@ func (m *meHandler) Show(c *gin.Context) {
 }
 
 func convert2UserResp(user *model.User, imageUrl image_url.URL) map[string]interface{} {
-	fmt.Println(user.UserInfo.AvatarHash, imageUrl.Generate(user.UserInfo.AvatarHash))
 	return map[string]interface{}{
 		"id":                user.Id,
 		"name":              user.Name,
