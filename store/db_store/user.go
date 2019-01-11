@@ -65,7 +65,7 @@ func (u *dbUser) UserListByUserIds(userIds []interface{}) (users []*model.User, 
 	}
 	users = make([]*model.User, 0, len(userIds))
 	err = u.db.Where("id in (?)", userIds).
-		Preload("Group").
+		Set("gorm:auto_preload", true).
 		Find(&users).
 		Error
 	return
@@ -73,7 +73,7 @@ func (u *dbUser) UserListByUserIds(userIds []interface{}) (users []*model.User, 
 
 func (u *dbUser) UserList(offset, limit int64) (users []*model.User, count int64, err error) {
 	users = make([]*model.User, 0, 10)
-	err = u.db.Preload("Group").
+	err = u.db.Set("gorm:auto_preload", true).
 		Offset(offset).
 		Limit(limit).
 		Find(&users).
