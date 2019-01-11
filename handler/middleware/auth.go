@@ -20,10 +20,17 @@ func AuthMiddleware(c *gin.Context) {
 		c.Abort()
 		return
 	}
+	user := LoggedUser(c)
+	if user.IsBan == true {
+		_ = c.Error(errors.UserIsBanned())
+		c.Abort()
+		return
+	}
 	c.Next()
 }
 
 func AdminMiddleware(c *gin.Context) {
+	// 必须是已登录状态
 	user := LoggedUser(c)
 	if user == nil || !user.IsAdmin {
 		_ = c.Error(errors.Forbidden("没有权限.", nil))

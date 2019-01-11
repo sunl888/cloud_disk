@@ -13,6 +13,7 @@ import (
 func CreateHTTPHandler(s *server.Server) http.Handler {
 	authHandler := NewAuthHandler()
 	meHandler := NewMeHandler(s.ImageUrl)
+	userHandler := NewUserHandler(s.ImageUrl)
 	uploadFileHandler := NewUploadFileHandler(s.FileUploader)
 	uploadImageHandler := NewUploadImage(s.ImageUploader, s.ImageUrl)
 	folderHandler := NewFolderHandler()
@@ -67,9 +68,10 @@ func CreateHTTPHandler(s *server.Server) http.Handler {
 		authorized.GET("/pre_download", downloadHandler.PreDownload)
 	}
 
-	adminRouter := api.Group("/")
+	adminRouter := api.Group("/admin")
 	adminRouter.Use(middleware.AuthMiddleware, middleware.AdminMiddleware)
 	{
+		adminRouter.PUT("/user/:id", userHandler.UpdateBanStatus)
 	}
 	// 文档
 	api.GET("/doc/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

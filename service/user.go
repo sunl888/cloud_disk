@@ -26,6 +26,9 @@ func (uSvc *userService) UserLogin(account, password string) (ticket *model.Tick
 	if err != nil {
 		return nil, err
 	}
+	if user.IsBan == true {
+		return nil, errors.UserIsBanned()
+	}
 	if uSvc.h.Check(password, user.Password) {
 		// 登录成功
 		return uSvc.tSvc.TicketGen(user.Id)
@@ -71,6 +74,12 @@ func (uSvc *userService) UserUpdateUsedStorage(userId int64, newUsedStorage uint
 	})
 }
 
+func (uSvc *userService) UserUpdateBanStatus(userId int64, newBanStatus bool) error {
+	return uSvc.UserStore.UserUpdate(userId, map[string]interface{}{
+		"is_ban": newBanStatus,
+	})
+}
+
 func NewUserService(us model.UserStore, cs model.CertificateStore, tSvc model.TicketService, h hasher.Hasher) model.UserService {
 	return &userService{us, cs, tSvc, h}
 }
@@ -97,4 +106,8 @@ func UserUpdateUsedStorage(ctx context.Context, userId int64, newUsedStorage uin
 
 func UserUpdate(ctx context.Context, userId int64, data map[string]interface{}) error {
 	return FromContext(ctx).UserUpdate(userId, data)
+}
+
+func UserUpdateBanStatus(ctx context.Context, userId int64, newBanStatus bool) error {
+	return FromContext(ctx).UserUpdateBanStatus(userId, newBanStatus)
 }

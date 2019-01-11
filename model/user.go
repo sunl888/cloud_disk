@@ -38,6 +38,7 @@ type UserService interface {
 	UserRegister(account string, certificateType CertificateType, password string) (userId int64, err error)
 	UserUpdatePassword(userId int64, newPassword string) (err error)
 	UserUpdateUsedStorage(userId int64, usedStorage uint64) (err error)
+	UserUpdateBanStatus(userId int64, newBanStatus bool) (err error)
 }
 
 var ErrUserNotExist = errors.New("user not exist")

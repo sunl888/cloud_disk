@@ -43,27 +43,47 @@ func NotFound(message string, err ...error) error {
 
 // 记录不存在
 func RecordNotFound(message string) error {
-	return gerrors.NotFound(10010, message, nil)
+	return gerrors.NotFound(10006, message, nil)
 }
 
 // 文件已存在
 func FileAlreadyExist(err error) error {
-	return gerrors.New(10011, 400, "file already existed", err)
+	return gerrors.New(10007, 400, "file already existed", err)
 }
 
 // 没有权限
 func Forbidden(msg string, err ...error) error {
-	return gerrors.Forbidden(10006, msg, err...)
+	return gerrors.Forbidden(10008, msg, err...)
 }
 
 func ErrAccountAlreadyExisted() error {
-	return gerrors.BadRequest(10007, "account already existed", nil)
+	return gerrors.BadRequest(10009, "account already existed", nil)
 }
 
 func ErrPassword() error {
-	return gerrors.BadRequest(10008, "密码错误", nil)
+	return gerrors.BadRequest(10010, "密码错误", nil)
 }
 
 func ErrAccountNotFound() error {
-	return gerrors.NotFound(10009, "账号不存在", nil)
+	return gerrors.NotFound(10011, "账号不存在", nil)
+}
+
+func UserIsBanned(message ...string) error {
+	var msg string
+	if len(message) == 0 {
+		msg = "此用户已禁用"
+	} else {
+		msg = message[0]
+	}
+	return gerrors.Forbidden(10012, msg, nil)
+}
+
+func UserNotAllowBeBan(message ...string) error {
+	var msg string
+	if len(message) == 0 {
+		msg = "不允许 ban 该用户"
+	} else {
+		msg = message[0]
+	}
+	return gerrors.Forbidden(10013, msg, nil)
 }
