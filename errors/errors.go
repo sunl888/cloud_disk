@@ -87,3 +87,13 @@ func UserNotAllowBeBan(message ...string) error {
 	}
 	return gerrors.Forbidden(10013, msg, nil)
 }
+
+func GroupNotAllowBeDelete(message ...string) error {
+	var msg string
+	if len(message) == 0 {
+		msg = "不允许删除该组"
+	} else {
+		msg = message[0]
+	}
+	return gerrors.Forbidden(10013, msg, nil)
+}
