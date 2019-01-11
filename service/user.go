@@ -111,3 +111,11 @@ func UserUpdate(ctx context.Context, userId int64, data map[string]interface{}) 
 func UserUpdateBanStatus(ctx context.Context, userId int64, newBanStatus bool) error {
 	return FromContext(ctx).UserUpdateBanStatus(userId, newBanStatus)
 }
+
+func UserListByUserIds(ctx context.Context, userIds []interface{}) ([]*model.User, error) {
+	return FromContext(ctx).UserListByUserIds(userIds)
+}
+
+func UserList(ctx context.Context, offset, limit int64) ([]*model.User, error) {
+	return FromContext(ctx).UserList(offset, limit)
+}

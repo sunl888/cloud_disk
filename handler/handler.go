@@ -71,8 +71,12 @@ func CreateHTTPHandler(s *server.Server) http.Handler {
 	adminRouter := api.Group("/admin")
 	adminRouter.Use(middleware.AuthMiddleware, middleware.AdminMiddleware)
 	{
-		adminRouter.PUT("/user/:id", userHandler.UpdateBanStatus)
+		// 用户列表
+		adminRouter.GET("/user", userHandler.UserList)
+		// 更新用户的禁用状态
+		adminRouter.PUT("/user/:id/ban_status", userHandler.UpdateBanStatus)
 	}
+
 	// 文档
 	api.GET("/doc/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	return router

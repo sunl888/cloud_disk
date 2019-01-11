@@ -39,6 +39,8 @@ type UserService interface {
 	UserUpdatePassword(userId int64, newPassword string) (err error)
 	UserUpdateUsedStorage(userId int64, usedStorage uint64) (err error)
 	UserUpdateBanStatus(userId int64, newBanStatus bool) (err error)
+	UserList(offset, limit int64) ([]*User, error)
+	UserListByUserIds(userIds []interface{}) ([]*User, error)
 }
 
 var ErrUserNotExist = errors.New("user not exist")

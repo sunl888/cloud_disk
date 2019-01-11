@@ -4,8 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/wq1019/cloud_disk/errors"
 	"github.com/wq1019/cloud_disk/handler/middleware"
-	"github.com/wq1019/cloud_disk/model"
-	"github.com/wq1019/cloud_disk/pkg/bytesize"
 	"github.com/wq1019/cloud_disk/service"
 	"github.com/zm-dev/go-image_uploader/image_url"
 	"net/http"
@@ -50,31 +48,6 @@ func (m *meHandler) UpdateInfo(c *gin.Context) {
 		return
 	}
 	c.JSON(204, nil)
-}
-
-func convert2UserResp(user *model.User, imageUrl image_url.URL) map[string]interface{} {
-	var gender string
-	if user.Gender {
-		gender = "男"
-	} else {
-		gender = "女"
-	}
-	return map[string]interface{}{
-		"id":                user.Id,
-		"name":              user.Name,
-		"email":             user.Email,
-		"gender":            gender,
-		"profile":           user.Profile,
-		"nickname":          user.Nickname,
-		"created_at":        user.CreatedAt,
-		"updated_at":        user.UpdatedAt,
-		"avatar_url":        imageUrl.Generate(user.AvatarHash),
-		"group_name":        user.Group.Name,
-		"avatar_hash":       user.AvatarHash,
-		"used_storage":      bytesize.ByteSize(user.UsedStorage),
-		"is_allow_share":    user.Group.AllowShare,
-		"max_allow_storage": bytesize.ByteSize(user.Group.MaxStorage),
-	}
 }
 
 func NewMeHandler(imageUrl image_url.URL) *meHandler {

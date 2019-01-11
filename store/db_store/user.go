@@ -59,6 +59,28 @@ func (u *dbUser) UserCreate(user *model.User) (err error) {
 	return
 }
 
+func (u *dbUser) UserListByUserIds(userIds []interface{}) (users []*model.User, err error) {
+	if len(userIds) == 0 {
+		return
+	}
+	users = make([]*model.User, 0, len(userIds))
+	err = u.db.Where("id in (?)", userIds).
+		Preload("Group").
+		Find(&users).
+		Error
+	return
+}
+
+func (u *dbUser) UserList(offset, limit int64) (users []*model.User, err error) {
+	users = make([]*model.User, 0, 10)
+	err = u.db.Preload("Group").
+		Offset(offset).
+		Limit(limit).
+		Find(&users).
+		Error
+	return
+}
+
 func NewDBUser(db *gorm.DB) model.UserStore {
 	return &dbUser{db: db}
 }
