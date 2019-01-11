@@ -73,7 +73,7 @@ func (u *dbUser) UserListByUserIds(userIds []interface{}) (users []*model.User, 
 
 func (u *dbUser) UserList(offset, limit int64) (users []*model.User, count int64, err error) {
 	users = make([]*model.User, 0, 10)
-	err = u.db.Set("gorm:auto_preload", true).
+	err = u.db.Preload("Group").
 		Offset(offset).
 		Limit(limit).
 		Find(&users).

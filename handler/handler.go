@@ -19,12 +19,14 @@ func CreateHTTPHandler(s *server.Server) http.Handler {
 	folderHandler := NewFolderHandler()
 	fileHandler := NewFileHandler()
 	downloadHandler := NewDownloadHandler(s.FileUploader)
+	groupHandler := NewGroupHandler()
 
 	if s.Debug {
 		gin.SetMode(gin.DebugMode)
 	} else {
 		gin.SetMode(gin.ReleaseMode)
 	}
+
 	router := gin.Default()
 	router.Use(middleware.Gorm(s.DB))
 	router.Use(middleware.Service(s.Service))
@@ -75,6 +77,14 @@ func CreateHTTPHandler(s *server.Server) http.Handler {
 		adminRouter.GET("/user", userHandler.UserList)
 		// 更新用户的禁用状态
 		adminRouter.PUT("/user/:id/ban_status", userHandler.UpdateBanStatus)
+		// 组列表
+		adminRouter.GET("/group", groupHandler.GroupList)
+		// 创建组
+		adminRouter.POST("/group", groupHandler.GroupCreate)
+		// 更新组
+		adminRouter.PUT("/group/:id", groupHandler.GroupUpdate)
+		// 删除指定组
+		adminRouter.DELETE("/group/:id", groupHandler.GroupDelete)
 	}
 
 	// 文档

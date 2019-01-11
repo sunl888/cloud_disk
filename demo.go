@@ -31,6 +31,8 @@ func main() {
 	fmt.Println(1024 << 10 << 10)
 	a := 1610612736.0
 	fmt.Println(a / 1024 / 1024 / 1024)
+
+	fmt.Println(10 | 0)
 }
 
 const (
