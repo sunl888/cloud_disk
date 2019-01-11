@@ -71,12 +71,13 @@ func (u *dbUser) UserListByUserIds(userIds []interface{}) (users []*model.User, 
 	return
 }
 
-func (u *dbUser) UserList(offset, limit int64) (users []*model.User, err error) {
+func (u *dbUser) UserList(offset, limit int64) (users []*model.User, count int64, err error) {
 	users = make([]*model.User, 0, 10)
 	err = u.db.Preload("Group").
 		Offset(offset).
 		Limit(limit).
 		Find(&users).
+		Count(&count).
 		Error
 	return
 }

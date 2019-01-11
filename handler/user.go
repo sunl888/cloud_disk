@@ -46,12 +46,15 @@ func (*userHandler) UpdateBanStatus(c *gin.Context) {
 
 func (u *userHandler) UserList(c *gin.Context) {
 	limit, offset := getInt64LimitAndOffset(c)
-	users, err := service.UserList(c.Request.Context(), offset, limit)
+	users, count, err := service.UserList(c.Request.Context(), offset, limit)
 	if err != nil {
 		_ = c.Error(err)
 		return
 	}
-	c.JSON(200, convert2UserListResp(users, u.imageUrl))
+	c.JSON(200, gin.H{
+		"count": count,
+		"data":  convert2UserListResp(users, u.imageUrl),
+	})
 }
 
 func convert2UserListResp(users []*model.User, imageUrl image_url.URL) []map[string]interface{} {

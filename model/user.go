@@ -30,7 +30,7 @@ type UserStore interface {
 	UserIsNotExistErr(err error) bool
 	UserUpdate(userId int64, data map[string]interface{}) error
 	UserCreate(user *User) error
-	UserList(offset, limit int64) ([]*User, error)
+	UserList(offset, limit int64) (user []*User, count int64, err error)
 	UserListByUserIds(userIds []interface{}) ([]*User, error)
 }
 

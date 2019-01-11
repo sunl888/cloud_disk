@@ -116,6 +116,6 @@ func UserListByUserIds(ctx context.Context, userIds []interface{}) ([]*model.Use
 	return FromContext(ctx).UserListByUserIds(userIds)
 }
 
-func UserList(ctx context.Context, offset, limit int64) ([]*model.User, error) {
+func UserList(ctx context.Context, offset, limit int64) (user []*model.User, count int64, err error) {
 	return FromContext(ctx).UserList(offset, limit)
 }
