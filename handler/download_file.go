@@ -97,7 +97,7 @@ func (d *downloadHandler) PreDownload(c *gin.Context) {
 
 // 文件下载
 // example:
-// curl -H "Range: bytes=0-12929" http://localhost:8080/api/download_v2?folder_id=1\&file_id=3 -v --output 3.png
+// curl -H "Range: bytes=0-12929" http://localhost:8080/api/download?folder_id=1\&file_id=3 -v --output 3.png
 func (d *downloadHandler) Download(c *gin.Context) {
 	l := struct {
 		FolderId int64 `json:"folder_id" form:"folder_id"`
@@ -146,7 +146,6 @@ func (d *downloadHandler) Download(c *gin.Context) {
 			_ = c.Error(err)
 			return
 		}
-		// 向 client 表明心意,支持 Range
 		c.Writer.Header().Add("Accept-Ranges", "bytes")
 		c.Writer.Header().Add("Content-Range", fmt.Sprintf("bytes %d-%d/%d", start, end, file.Size))
 		// 这里必须要提前设置状态吗为 206 否则会 Warning https://github.com/gin-gonic/gin/issues/471#issuecomment-190186203
