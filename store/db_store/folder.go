@@ -39,53 +39,70 @@ func (f *dbFolder) RenameFolder(id int64, newName string) (err error) {
 	return
 }
 
-func (f *dbFolder) CopyFolder(to *model.Folder, ids []int64) (err error) {
+func (f *dbFolder) CopyFolder(to *model.Folder, waitCopyFoders []*model.Folder) (err error) {
 	var (
-		rootFolder model.Folder    // 将要移动的第一层目录
-		toId2Str   string          // 移动到的目录 ID 字符串形式
-		tmpFolder  model.Folder    // 临时 folder
-		children   []*model.Folder // 子目录
-		id2Str     string          // 移动的目录的 ID 字符串形式
-		idMap      map[int64]int64
+		toId2Str string      // 移动到的目录 ID 字符串形式
+		userId   = to.UserId // 用户 id
 	)
-	children = make([]*model.Folder, 0, 5)
-	idMap = make(map[int64]int64, len(ids))
 	toId2Str = strconv.FormatInt(to.Id, 10)
-	for _, id := range ids {
-		id2Str = strconv.FormatInt(id, 10)
-		err := f.db.First(&rootFolder, "id = ?", id).Error
-		if err != nil {
-			if gorm.IsRecordNotFoundError(err) {
-				continue
-			}
-			return err
-		}
-		tmpFolder = rootFolder
+	for _, waitFolder := range waitCopyFoders {
+		var (
+			waitCopyId2Str = strconv.FormatInt(waitFolder.Id, 10) // 等待移动的目录ID string 形式
+			children       = make([]*model.Folder, 0, 5)
+			idMap          = make(map[int64]int64, 3)
+			pIdMap         = make(map[int64]int64, 3)
+		)
 		// 查询所有子目录
-		f.db.Model(model.Folder{}).Where("`key` LIKE ?", rootFolder.Key+id2Str+"-%").Order("id ASC").Find(children)
-		newFolder := model.Folder{
-			UserId:     rootFolder.UserId,
-			FolderName: rootFolder.FolderName,
+		f.db.Model(model.Folder{}).Where("`key` LIKE ?", waitFolder.Key+waitCopyId2Str+"-%").Order("id ASC").Find(&children)
+		newRootFolder := model.Folder{
+			UserId:     userId,
+			FolderName: waitFolder.FolderName,
 			Level:      to.Level + 1,
-			ParentId:   to.Id,
+			ParentId:   to.Id, // new parentID
 			Key:        to.Key + toId2Str + model.FolderKeyPrefix,
 		}
+		var count int
+		f.db.Model(model.Folder{}).Where("user_id = ? AND folder_name = ? AND parent_id = ?",
+			userId, newRootFolder.FolderName, newRootFolder.ParentId).Limit(1).Count(&count)
+		if count > 0 {
+			//return model.FolderAlreadyExisted
+			continue // 目录已存在, 跳过直接复制下一个目录
+		}
 		// 创建一个与原根目录相等的根目录
-		f.db.Create(&newFolder)
-		idMap[rootFolder.Id] = newFolder.Id
+		f.db.Create(&newRootFolder)
+		idMap[waitFolder.Id] = newRootFolder.Id
+		pIdMap[newRootFolder.Id] = 0
+
 		// 创建子目录
+		newFolders := make(map[int64]*model.Folder, len(children))
 		for i := 0; i < len(children); i++ {
-			pId := strconv.FormatInt(children[i].ParentId, 10)
-			key := replaceKey(idMap, newFolder.Key, children[i].Key, pId)
 			newChildFolder := model.Folder{
-				UserId:     rootFolder.UserId,
-				FolderName: rootFolder.FolderName,
-				Key:        key,                         // todo
-				ParentId:   idMap[children[i].ParentId], // todo
-				Level:      newFolder.Level + (children[i].Level - tmpFolder.Level),
+				UserId:     userId,
+				FolderName: children[i].FolderName,
+				Key:        children[i].Key,                                              // default
+				ParentId:   children[i].ParentId,                                         // default
+				Level:      newRootFolder.Level + (children[i].Level - waitFolder.Level), // must >0
 			}
 			f.db.Create(&newChildFolder)
 			idMap[children[i].Id] = newChildFolder.Id
+			pIdMap[newChildFolder.Id] = newChildFolder.ParentId
+
+			newFolders[newChildFolder.Id] = &newChildFolder
+		}
+		// 更新所有新的 child 目录 的 key 和 parentId
+		for id, folder := range newFolders {
+			key := newRootFolder.Key
+			tmpKey := ""
+			pId := folder.ParentId
+			for i := int64(0); i < folder.Level-newRootFolder.Level; i++ {
+				tmpKey = fmt.Sprintf("%d-", idMap[pId]) + tmpKey
+				pId = pIdMap[idMap[pId]]
+			}
+			newParentId := idMap[folder.ParentId]
+			f.db.Model(model.Folder{}).Where("id = ?", id).Updates(model.Folder{
+				Key:      key + tmpKey,
+				ParentId: newParentId,
+			})
 		}
 		// 创建新的文件关联
 		type FolderFile struct {
@@ -99,16 +116,18 @@ func (f *dbFolder) CopyFolder(to *model.Folder, ids []int64) (err error) {
 		for k := range idMap {
 			oldFolderIds = append(oldFolderIds, k)
 		}
-		f.db.Table("folder_files").Where("folder_id IN (?)", oldFolderIds).Scan(&folderFiles)
-		// INSERT INTO `users` VALUES (?,?,?),(?,?,?)
-		sql := "INSERT INTO `folder_files` (`folder_id`,`file_id`)VALUES "
-		for _, v := range folderFiles {
-			sql += fmt.Sprintf("(%d,%d),", idMap[v.FolderId], v.FileId)
+		err = f.db.Table("folder_files").Where("folder_id IN (?)", oldFolderIds).Scan(&folderFiles).Error
+		if err != nil {
+			return err
 		}
-		sql = strings.TrimRight(sql, ",")
-		f.db.Exec(sql)
-		children = nil
-		rootFolder = model.Folder{}
+		// 如果文件不存在则创建
+		sql := "INSERT INTO `folder_files` " +
+			"SELECT ?,`file_id`,`filename` FROM `folder_files` WHERE (`folder_id` = ? AND `file_id` = ?) AND " +
+			"NOT EXISTS (SELECT `folder_id` FROM `folder_files` WHERE `folder_id` = ? AND `file_id` = ?)"
+		for _, v := range folderFiles {
+			newFolderId := idMap[v.FolderId]
+			f.db.Exec(sql, newFolderId, v.FolderId, v.FileId, newFolderId, v.FileId)
+		}
 	}
 	return nil
 }
@@ -247,8 +266,9 @@ func updateKey(parentKey, key, startId string) string {
 	return ""
 }
 
-func replaceKey(idMap map[int64]int64, parentKey, key, startId string) string {
-	newKey := updateKey(parentKey, key, startId)
+func replaceKey(idMap map[int64]int64, parentKey, key string, startId int64) string {
+	pId := strconv.FormatInt(startId, 10)
+	newKey := updateKey(parentKey, key, pId)
 	if newKey == "" {
 		return ""
 	}
@@ -261,6 +281,16 @@ func replaceKey(idMap map[int64]int64, parentKey, key, startId string) string {
 		}
 	}
 	return strings.Join(keys, "-")
+}
+
+func fun(folderMap map[int64]int64, pId, vId int64) (key string) {
+	pStr := strconv.FormatInt(pId, 10)
+	if pId == vId {
+		return pStr
+	} else if pId == 0 {
+		return ""
+	}
+	return fun(folderMap, folderMap[pId], vId) + pStr
 }
 
 func NewDBFolder(db *gorm.DB) model.FolderStore {

@@ -242,9 +242,10 @@ func (*folderHandler) Move2Folder(c *gin.Context) {
 
 func (*folderHandler) Copy2Folder(c *gin.Context) {
 	l := struct {
-		FileIds    []int64 `json:"file_ids" form:"file_ids"`
-		FolderIds  []int64 `json:"folder_ids" form:"folder_ids"`
-		ToFolderId int64   `json:"to_folder_id" form:"to_folder_id"`
+		FileIds      []int64 `json:"file_ids" form:"file_ids"`
+		FolderIds    []int64 `json:"folder_ids" form:"folder_ids"`
+		ToFolderId   int64   `json:"to_folder_id" form:"to_folder_id"`
+		FromFolderId int64   `json:"from_folder_id" form:"from_folder_id"`
 	}{}
 	if err := c.ShouldBind(&l); err != nil {
 		_ = c.Error(err)
@@ -258,33 +259,63 @@ func (*folderHandler) Copy2Folder(c *gin.Context) {
 		_ = c.Error(errors.BadRequest("请指定复制到哪个目录"))
 		return
 	}
-	authId := middleware.UserId(c)
+	var (
+		allowCopyFileIds []int64
+		authId           = middleware.UserId(c)
+	)
+	// 判断将要复制到的目录是否属于自己
 	toFolder, err := service.LoadFolder(c.Request.Context(), l.ToFolderId, authId, false)
 	if err != nil {
 		_ = c.Error(err)
 		return
 	}
-	if toFolder.UserId != authId {
-		_ = c.Error(errors.Unauthorized("没有权限复制"))
+	// 判断指定的当前目录是否属于自己
+	fromFolder, err := service.LoadFolder(c.Request.Context(), l.FromFolderId, authId, false)
+	if err != nil {
+		_ = c.Error(err)
 		return
 	}
-	// 复制指定的文件
+	if toFolder.UserId != authId || fromFolder.UserId != authId {
+		_ = c.Error(errors.Unauthorized("该目录没有权限复制"))
+		return
+	}
+
 	if len(l.FileIds) > 0 {
-		//TODO 文件需要验证有没有权限复制
-		err := service.CopyFile(c.Request.Context(), toFolder.Id, l.FileIds)
+		// 过滤出有权限复制的文件
+		ownFiles, err := service.LoadFolderFilesByFolderIdAndFileIds(c.Request.Context(), l.FromFolderId, l.FileIds, authId)
 		if err != nil {
 			_ = c.Error(err)
 			return
 		}
+		for _, file := range ownFiles {
+			allowCopyFileIds = append(allowCopyFileIds, file.FileId)
+		}
+		// 复制当前目录指定的文件到指定目录
+		if len(allowCopyFileIds) > 0 {
+			err := service.CopyFile(c.Request.Context(), l.FromFolderId, toFolder.Id, allowCopyFileIds)
+			if err != nil {
+				_ = c.Error(err)
+				return
+			}
+		}
 	}
-	// 复制指定的目录包括目录中的文件到指定位置
 	if len(l.FolderIds) > 0 {
-		err := service.CopyFolder(c.Request.Context(), toFolder, l.FolderIds)
+		// 过滤出有权限复制的目录
+		ownFolders, err := service.ListFolder(c.Request.Context(), l.FolderIds, authId)
 		if err != nil {
 			_ = c.Error(err)
 			return
 		}
+		// 复制指定的目录包括目录中的文件到指定位置
+		if len(ownFolders) > 0 {
+			err := service.CopyFolder(c.Request.Context(), toFolder, ownFolders)
+			if err != nil {
+				_ = c.Error(err)
+				return
+			}
+		}
 	}
+
 	c.Status(http.StatusOK)
 }
 

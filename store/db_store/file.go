@@ -40,17 +40,19 @@ func (f *dbFile) RenameFile(folderId, fileId int64, newName string) (err error) 
 	return err
 }
 
-func (f *dbFile) CopyFile(toId int64, fileIds []int64) (err error) {
-	//TODO 复制文件时需要提供folderId
-	//for _, fileId := range fileIds {
-	//	f.db.Table("folder_files").First(&model.FolderFile{},"folder_id = ? AND file_id = ?",fromId,fileId)
-	//	f.db.Table("folder_files").
-	//		FirstOrCreate(&model.FolderFile{
-	//			FolderId: toId,
-	//			FileId:   fileId,
-	//			Filename:fileId,
-	//		}, "folder_id = ? AND file_id = ?", toId, fileId)
-	//}
+func (f *dbFile) CopyFile(fromId, toId int64, fileIds []int64) (err error) {
+	// 复制指定的文件索引并插入(创建)到指定目录
+	// 不能用 IN  因为只要有一个文件已存在就会导致所有文件都不会被复制,因此这里必须循环检测每个文件是否已经存在
+	// EXPLAIN INSERT INTO `folder_files` SELECT 4,`file_id`,`filename` FROM `folder_files` WHERE (`folder_id` = '1' AND `file_id` IN ('1','2')) AND NOT EXISTS (SELECT * FROM `folder_files` WHERE `folder_id` = '4' AND `file_id` IN ('1','2'))
+	sql := "INSERT INTO `folder_files` " +
+		"SELECT ?,`file_id`,`filename` FROM `folder_files` WHERE (`folder_id` = ? AND `file_id` = ?) AND " +
+		"NOT EXISTS (SELECT `folder_id` FROM `folder_files` WHERE `folder_id` = ? AND `file_id` = ?)"
+	for _, fileId := range fileIds {
+		err = f.db.Exec(sql, toId, fromId, fileId, toId, fileId).Error
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

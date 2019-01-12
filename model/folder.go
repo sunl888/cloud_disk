@@ -1,6 +1,9 @@
 package model
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 type Folder struct {
 	Id         int64     `gorm:"type:BIGINT AUTO_INCREMENT;PRIMARY_KEY;NOT NUll" json:"id"` // ID
@@ -19,6 +22,8 @@ const (
 	FolderKeyPrefix = "-"
 )
 
+var FolderAlreadyExisted = errors.New("目录已存在")
+
 type FolderStore interface {
 	// 创建一个目录
 	CreateFolder(folder *Folder) (err error)
@@ -31,10 +36,10 @@ type FolderStore interface {
 	// 移动目录
 	MoveFolder(to *Folder, ids []int64) (err error)
 	// 复制目录
-	CopyFolder(to *Folder, ids []int64) (err error)
+	CopyFolder(to *Folder, foders []*Folder) (err error)
 	// 重命名目录
 	RenameFolder(id int64, newName string) (err error)
-
+	// 目录列表
 	ListFolder(folderIds []int64, userId int64) (folder []*Folder, err error)
 }
 
