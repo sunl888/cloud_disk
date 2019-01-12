@@ -22,7 +22,7 @@ const (
 	FolderKeyPrefix = "-"
 )
 
-var FolderAlreadyExisted = errors.New("目录已存在")
+var FolderAlreadyExisted = errors.New("该目录已经存在")
 
 type FolderStore interface {
 	// 创建一个目录

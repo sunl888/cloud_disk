@@ -211,6 +211,10 @@ func (*folderHandler) Move2Folder(c *gin.Context) {
 		_ = c.Error(errors.BadRequest("请指定移动到哪个目录"))
 		return
 	}
+	if l.FromFolderId == l.ToFolderId {
+		_ = c.Error(errors.BadRequest("当前文件夹和目的文件夹相等"))
+		return
+	}
 	authId := middleware.UserId(c)
 	fromFolder, err := service.LoadFolder(c.Request.Context(), l.FromFolderId, authId, false)
 	if err != nil {
@@ -260,6 +264,10 @@ func (*folderHandler) Copy2Folder(c *gin.Context) {
 	}
 	if l.ToFolderId == 0 {
 		_ = c.Error(errors.BadRequest("请指定复制到哪个目录"))
+		return
+	}
+	if l.FromFolderId == l.ToFolderId {
+		_ = c.Error(errors.BadRequest("当前文件夹和目的文件夹相等"))
 		return
 	}
 	var (

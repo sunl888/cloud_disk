@@ -1,9 +1,11 @@
 package model
 
+// 次序千万不能更改,否则 gorm 的 select 就不能用了
 type FolderFile struct {
-	FolderId int64  `gorm:"type:BIGINT;index:folder_id_file_id_unique_index"`
-	FileId   int64  `gorm:"type:BIGINT;index:folder_id_file_id_unique_index"`
-	Filename string `gorm:"type:varchar(255);NOT NULL" json:"filename"`
+	FolderId     int64  `gorm:"type:BIGINT;NOT NUll" json:"folder_id"`
+	OriginFileId int64  `gorm:"type:BIGINT;NOT NUll" json:"origin_file_id"`
+	Filename     string `gorm:"type:varchar(255);NOT NULL" json:"filename"`
+	FileId       int64  `gorm:"type:BIGINT AUTO_INCREMENT;PRIMARY_KEY;NOT NUll" json:"file_id"`
 }
 
 type WrapFolderFile struct {

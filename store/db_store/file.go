@@ -13,11 +13,13 @@ type dbFile struct {
 func (f *dbFile) LoadFile(folderId, fileId, userId int64) (file *model.File, err error) {
 	file = &model.File{}
 	err = f.db.Table("folders fo").
-		Select("f.id, ff.filename, f.hash, f.format, f.extra, f.size, f.created_at, f.updated_at").
+		Select("ff.file_id as id, ff.filename, f.hash, f.format, f.extra, f.size, f.created_at, f.updated_at").
 		Joins("LEFT JOIN `folder_files` ff ON ff.folder_id = fo.id").
-		Joins("LEFT JOIN `files` f ON f.id = ff.file_id").
-		Where("fo.id = ? AND fo.user_id = ? AND ff.file_id = ?", folderId, userId, fileId).Limit(1).
-		Scan(&file).Error
+		Joins("LEFT JOIN `files` f ON f.id = ff.origin_file_id").
+		Where("fo.id = ? AND fo.user_id = ? AND ff.file_id = ?", folderId, userId, fileId).
+		Limit(1).
+		Scan(&file).
+		Error
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			err = errors.RecordNotFound("文件不存在")
@@ -34,7 +36,7 @@ func (f *dbFile) RenameFile(folderId, fileId int64, newName string) (err error) 
 		return errors.FileAlreadyExist("该目录下已经存在同名文件")
 	} else {
 		err = f.db.Model(model.FolderFile{}).
-			Where("folder_id = ? AND file_id = ?", folderId, fileId).
+			Where("file_id = ?", fileId).
 			Update("filename", newName).
 			Error
 		if gorm.IsRecordNotFoundError(err) {
@@ -44,36 +46,93 @@ func (f *dbFile) RenameFile(folderId, fileId int64, newName string) (err error) 
 	return err
 }
 
+// fromId != toId
 func (f *dbFile) CopyFile(fromId, toId int64, fileIds []int64) (totalSize uint64, err error) {
-	// 复制指定的文件索引并插入(创建)到指定目录
-	// 不能用 IN  因为只要有一个文件已存在就会导致所有文件都不会被复制,因此这里必须循环检测每个文件是否已经存在
-	// EXPLAIN INSERT INTO `folder_files` SELECT 4,`file_id`,`filename` FROM `folder_files` WHERE (`folder_id` = '1' AND `file_id` IN ('1','2')) AND NOT EXISTS (SELECT * FROM `folder_files` WHERE `folder_id` = '4' AND `file_id` IN ('1','2'))
-	sql := "INSERT INTO `folder_files` " +
-		"SELECT ?,`file_id`,`filename` FROM `folder_files` WHERE (`folder_id` = ? AND `file_id` = ?) AND " +
-		"NOT EXISTS (SELECT `folder_id` FROM `folder_files` WHERE `folder_id` = ? AND `file_id` = ?)"
 	savedFileIds := make([]int64, 0, len(fileIds))
 	for _, fileId := range fileIds {
-		rowsAffected := f.db.Exec(sql, toId, fromId, fileId, toId, fileId).RowsAffected
-		if rowsAffected > 0 {
-			savedFileIds = append(savedFileIds, fileId)
+		var (
+			fromFile model.FolderFile
+			count    int
+		)
+		// 查询源文件信息
+		err = f.db.Model(model.FolderFile{}).
+			Where("`folder_id` = ? AND `file_id` = ?", fromId, fileId).
+			First(&fromFile).
+			Error
+		if err != nil {
+			if gorm.IsRecordNotFoundError(err) {
+				continue
+			}
+			return
 		}
+		// 查询目标目录有没有同名文件
+		err = f.db.Model(model.FolderFile{}).
+			Where("`folder_id` = ? AND `filename` = ?", toId, fromFile.Filename).
+			Limit(1).
+			Count(&count).
+			Error
+		if err != nil {
+			return
+		}
+		// 移动到的目录已经存在同名文件
+		if count > 0 {
+			continue
+		}
+		err = f.db.Create(&model.FolderFile{
+			OriginFileId: fromFile.OriginFileId,
+			FolderId:     toId,
+			Filename:     fromFile.Filename,
+		}).Error
+		if err != nil {
+			return
+		}
+		savedFileIds = append(savedFileIds, fromFile.OriginFileId)
 	}
+	// 计算复制的文件大小
 	if len(savedFileIds) > 0 {
-		files := make([]*model.File, 0, len(savedFileIds))
-		f.db.Model(model.File{}).Where("id IN (?) ", savedFileIds).First(&files)
-		for _, file := range files {
-			totalSize += uint64(file.Size)
+		fileSizes := make([]int64, 0, len(savedFileIds))
+		f.db.Table("files").Where("id IN (?)", savedFileIds).Pluck("size", &fileSizes)
+		for _, size := range fileSizes {
+			totalSize += uint64(size)
 		}
 	}
 	return
 }
 
 func (f *dbFile) MoveFile(fromId, toId int64, fileIds []int64) (err error) {
-	err = f.db.Table("folder_files").
-		Where("folder_id = ? AND file_id IN (?)", fromId, fileIds).
-		Update(map[string]interface{}{
-			"folder_id": toId,
-		}).Error
+	for _, fileId := range fileIds {
+		var (
+			fromFile model.FolderFile
+			count    int
+		)
+		err = f.db.Model(model.FolderFile{}).
+			Where("`folder_id` = ? AND `file_id` = ?", fromId, fileId).
+			First(&fromFile).
+			Error
+		if err != nil {
+			if gorm.IsRecordNotFoundError(err) {
+				continue
+			}
+			return
+		}
+		err = f.db.Model(model.FolderFile{}).
+			Where("`folder_id` = ? AND `filename` = ?", toId, fromFile.Filename).
+			Limit(1).
+			Count(&count).
+			Error
+		if err != nil {
+			return
+		}
+		// 移动到的目录已经存在同名文件
+		if count > 0 {
+			continue
+		} else {
+			err = f.db.Model(&fromFile).Update("folder_id", toId).Error
+			if err != nil {
+				return
+			}
+		}
+	}
 	return
 }
 
@@ -85,9 +144,9 @@ func (f *dbFile) DeleteFile(ids []int64, folderId int64) (err error) {
 func (f *dbFile) SaveFileToFolder(file *model.File, folder *model.Folder) (err error) {
 	err = f.db.Model(model.File{}).Create(
 		&model.FolderFile{
-			FolderId: folder.Id,
-			FileId:   file.Id,
-			Filename: file.Filename,
+			FolderId:     folder.Id,
+			OriginFileId: file.Id,
+			Filename:     file.Filename,
 		}).Error
 	return
 }

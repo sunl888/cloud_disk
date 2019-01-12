@@ -78,7 +78,6 @@ func (f *dbFolder) CopyFolder(to *model.Folder, waitCopyFoders []*model.Folder) 
 		f.db.Model(model.Folder{}).Where("user_id = ? AND folder_name = ? AND parent_id = ?",
 			userId, newRootFolder.FolderName, newRootFolder.ParentId).Limit(1).Count(&count)
 		if count > 0 {
-			//return model.FolderAlreadyExisted
 			continue // 目录已存在, 跳过直接复制下一个目录
 		}
 		// 创建一个与原根目录相等的根目录
@@ -133,18 +132,18 @@ func (f *dbFolder) CopyFolder(to *model.Folder, waitCopyFoders []*model.Folder) 
 		if err != nil {
 			return
 		}
-		// 如果文件不存在则创建
-		sql := "INSERT INTO `folder_files` " +
-			"SELECT ?,`file_id`,`filename` FROM `folder_files` WHERE (`folder_id` = ? AND `file_id` = ?) AND " +
-			"NOT EXISTS (SELECT `folder_id` FROM `folder_files` WHERE `folder_id` = ? AND `file_id` = ?)"
+		// 文件索引创建,因为目录都是新创建的,所以不可能会出现文件已存在的情况
+		sql := "INSERT INTO `folder_files` SELECT ?,`origin_file_id`,`filename`,NULL FROM `folder_files` WHERE `folder_id` = ? AND `file_id` = ?"
 		for _, v := range folderFiles {
 			newFolderId := idMap[v.FolderId]
-			rowsAffected := f.db.Exec(sql, newFolderId, v.FolderId, v.FileId, newFolderId, v.FileId).RowsAffected
+			rowsAffected := f.db.Exec(sql, newFolderId, v.FolderId, v.FileId).RowsAffected
 			if rowsAffected > 0 {
+				sizes := make([]int64, 0, 1)
 				// 成功复制一个文件索引就为用户的使用空间加上这个文件占用的空间
-				file := model.File{}
-				f.db.Model(model.File{}).Where("id = ? ", v.FileId).First(&file)
-				totalSize += uint64(file.Size)
+				f.db.Table("folder_files ff").
+					Joins("LEFT JOIN `files` f ON ff.origin_file_id = f.id").
+					Where("ff.file_id = ?", v.FileId).Pluck("f.size", &sizes)
+				totalSize += uint64(sizes[0])
 			}
 		}
 	}
@@ -251,9 +250,9 @@ func (f *dbFolder) LoadFolder(id, userId int64, isLoadRelated bool) (folder *mod
 	q := f.db.Model(model.Folder{})
 	if isLoadRelated {
 		f.db.Table("folders fo").
-			Select("f.id, ff.filename, f.hash, f.format, f.extra, f.size, f.created_at, f.updated_at").
+			Select("ff.file_id as id, ff.filename, f.hash, f.format, f.extra, f.size, f.created_at, f.updated_at").
 			Joins("INNER JOIN `folder_files` ff ON ff.folder_id = fo.id").
-			Joins("INNER JOIN `files` f ON f.id = ff.file_id").
+			Joins("INNER JOIN `files` f ON f.id = ff.origin_file_id").
 			Where("fo.id = ?", id).Find(&files)
 		q = q.Preload("Folders", "user_id = ?", userId) // 此语句是在 #232 行时才执行的
 	}
@@ -283,33 +282,6 @@ func updateKey(parentKey, key, startId string) string {
 		}
 	}
 	return ""
-}
-
-func replaceKey(idMap map[int64]int64, parentKey, key string, startId int64) string {
-	pId := strconv.FormatInt(startId, 10)
-	newKey := updateKey(parentKey, key, pId)
-	if newKey == "" {
-		return ""
-	}
-	keys := strings.Split(key, "-")
-	for index, key := range keys {
-		key2Int64, _ := strconv.ParseInt(key, 10, 64)
-		if newId, ok := idMap[key2Int64]; ok {
-			id2Str := strconv.FormatInt(newId, 10)
-			keys[index] = id2Str
-		}
-	}
-	return strings.Join(keys, "-")
-}
-
-func fun(folderMap map[int64]int64, pId, vId int64) (key string) {
-	pStr := strconv.FormatInt(pId, 10)
-	if pId == vId {
-		return pStr
-	} else if pId == 0 {
-		return ""
-	}
-	return fun(folderMap, folderMap[pId], vId) + pStr
 }
 
 func NewDBFolder(db *gorm.DB) model.FolderStore {
