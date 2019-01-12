@@ -169,6 +169,7 @@ func (*folderHandler) DeleteSource(c *gin.Context) {
 	authId := middleware.UserId(c)
 	// 删除指定的文件
 	if len(l.FileIds) > 0 {
+		// 判断当前目录有没有权限
 		currentFolder, err := service.LoadFolder(c.Request.Context(), l.CurrentFolderId, authId, false)
 		if err != nil {
 			_ = c.Error(err)
