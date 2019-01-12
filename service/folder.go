@@ -37,8 +37,8 @@ func CopyFolder(ctx context.Context, to *model.Folder, foders []*model.Folder) (
 	return FromContext(ctx).CopyFolder(to, foders)
 }
 
-func RenameFolder(ctx context.Context, id int64, newName string) (err error) {
-	return FromContext(ctx).RenameFolder(id, newName)
+func RenameFolder(ctx context.Context, id, currentFolderId int64, newName string) (err error) {
+	return FromContext(ctx).RenameFolder(id, currentFolderId, newName)
 }
 
 func NewFolderService(ds model.FolderStore) model.FolderService {

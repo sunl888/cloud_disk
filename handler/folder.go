@@ -20,6 +20,7 @@ type folderHandler struct{}
 // @Accept json,multipart/form-data
 // @Produce json,multipart/form-data
 // @Param folder_id query uint64 true "所属的目录 ID" Format(uint64)
+// @Param current_folder_id query uint64 true "当前目录 ID" Format(uint64)
 // @Param new_name query string true "新的目录名" Format(string)
 // @Success 204
 // @Failure 404 {object} errors.GlobalError "目录不存在"
@@ -27,8 +28,9 @@ type folderHandler struct{}
 // @Router /folder/rename [PUT]
 func (*folderHandler) RenameFolder(c *gin.Context) {
 	l := struct {
-		FolderId int64  `json:"folder_id" form:"folder_id"`
-		NewName  string `json:"new_name" form:"new_name"`
+		FolderId        int64  `json:"folder_id" form:"folder_id"`
+		NewName         string `json:"new_name" form:"new_name"`
+		CurrentFolderId int64  `json:"current_folder_id" form:"current_folder_id"`
 	}{}
 	if err := c.ShouldBind(&l); err != nil {
 		_ = c.Error(err)
@@ -40,7 +42,7 @@ func (*folderHandler) RenameFolder(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-	err = service.RenameFolder(c.Request.Context(), folder.Id, l.NewName)
+	err = service.RenameFolder(c.Request.Context(), folder.Id, l.CurrentFolderId, l.NewName)
 	if err != nil {
 		_ = c.Error(err)
 		return

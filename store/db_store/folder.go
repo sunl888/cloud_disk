@@ -31,11 +31,24 @@ func (f *dbFolder) ListFolder(folderIds []int64, userId int64) (folders []*model
 	return
 }
 
-func (f *dbFolder) RenameFolder(id int64, newName string) (err error) {
-	err = f.db.Model(model.Folder{}).
-		Where("id = ?", id).
-		Update("folder_name", newName).
+func (f *dbFolder) RenameFolder(id, currentFolderId int64, newName string) (err error) {
+	var count int
+	err = f.db.Table("`folders` fo").
+		Where("fo.parent_id = ? AND fo.folder_name = ?", currentFolderId, newName).
+		Limit(1).
+		Count(&count).
 		Error
+	if err != nil {
+		return
+	}
+	if count > 0 {
+		return model.FolderAlreadyExisted
+	} else {
+		err = f.db.Model(model.Folder{}).
+			Where("id = ?", id).
+			Update("folder_name", newName).
+			Error
+	}
 	return
 }
 

@@ -38,7 +38,7 @@ type FolderStore interface {
 	// 复制目录
 	CopyFolder(to *Folder, foders []*Folder) (totalSize uint64, err error)
 	// 重命名目录
-	RenameFolder(id int64, newName string) (err error)
+	RenameFolder(id, currentFolderId int64, newName string) (err error)
 	// 目录列表
 	ListFolder(folderIds []int64, userId int64) (folder []*Folder, err error)
 }
