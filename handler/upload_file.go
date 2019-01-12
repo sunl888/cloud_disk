@@ -8,7 +8,6 @@ import (
 	"github.com/wq1019/cloud_disk/service"
 	"github.com/wq1019/go-file-uploader"
 	"net/http"
-	"strings"
 )
 
 type uploadFile struct {
@@ -89,17 +88,6 @@ func (uf *uploadFile) UploadFile(c *gin.Context) {
 		}
 		c.JSON(http.StatusCreated, fileModel)
 	}
-}
-
-func (uf *uploadFile) ShowFile(c *gin.Context) {
-	hash := strings.TrimSpace(c.Param("hash"))
-	s := uf.u.Store()
-	fileModel, err := s.FileLoad(hash)
-	if s.FileIsNotExistError(err) {
-		_ = c.Error(errors.NotFound("文件不存在"))
-		return
-	}
-	c.JSON(200, fileModel)
 }
 
 func convert2FileModel(upload *go_file_uploader.FileModel) *model.File {
