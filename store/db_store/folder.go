@@ -39,7 +39,7 @@ func (f *dbFolder) RenameFolder(id int64, newName string) (err error) {
 	return
 }
 
-func (f *dbFolder) CopyFolder(to *model.Folder, waitCopyFoders []*model.Folder) (err error) {
+func (f *dbFolder) CopyFolder(to *model.Folder, waitCopyFoders []*model.Folder) (totalSize uint64, err error) {
 	var (
 		toId2Str string      // 移动到的目录 ID 字符串形式
 		userId   = to.UserId // 用户 id
@@ -118,7 +118,7 @@ func (f *dbFolder) CopyFolder(to *model.Folder, waitCopyFoders []*model.Folder) 
 		}
 		err = f.db.Table("folder_files").Where("folder_id IN (?)", oldFolderIds).Scan(&folderFiles).Error
 		if err != nil {
-			return err
+			return
 		}
 		// 如果文件不存在则创建
 		sql := "INSERT INTO `folder_files` " +
@@ -126,10 +126,16 @@ func (f *dbFolder) CopyFolder(to *model.Folder, waitCopyFoders []*model.Folder) 
 			"NOT EXISTS (SELECT `folder_id` FROM `folder_files` WHERE `folder_id` = ? AND `file_id` = ?)"
 		for _, v := range folderFiles {
 			newFolderId := idMap[v.FolderId]
-			f.db.Exec(sql, newFolderId, v.FolderId, v.FileId, newFolderId, v.FileId)
+			rowsAffected := f.db.Exec(sql, newFolderId, v.FolderId, v.FileId, newFolderId, v.FileId).RowsAffected
+			if rowsAffected > 0 {
+				// 成功复制一个文件索引就为用户的使用空间加上这个文件占用的空间
+				file := model.File{}
+				f.db.Model(model.File{}).Where("id = ? ", v.FileId).First(&file)
+				totalSize += uint64(file.Size)
+			}
 		}
 	}
-	return nil
+	return
 }
 
 func (f *dbFolder) MoveFolder(to *model.Folder, ids []int64) (err error) {

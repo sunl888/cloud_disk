@@ -260,6 +260,7 @@ func (*folderHandler) Copy2Folder(c *gin.Context) {
 		return
 	}
 	var (
+		totalFileSize    uint64
 		allowCopyFileIds []int64
 		authId           = middleware.UserId(c)
 	)
@@ -292,11 +293,12 @@ func (*folderHandler) Copy2Folder(c *gin.Context) {
 		}
 		// 复制当前目录指定的文件到指定目录
 		if len(allowCopyFileIds) > 0 {
-			err := service.CopyFile(c.Request.Context(), l.FromFolderId, toFolder.Id, allowCopyFileIds)
+			totalSize, err := service.CopyFile(c.Request.Context(), l.FromFolderId, toFolder.Id, allowCopyFileIds)
 			if err != nil {
 				_ = c.Error(err)
 				return
 			}
+			totalFileSize += totalSize
 		}
 	}
 	if len(l.FolderIds) > 0 {
@@ -308,11 +310,20 @@ func (*folderHandler) Copy2Folder(c *gin.Context) {
 		}
 		// 复制指定的目录包括目录中的文件到指定位置
 		if len(ownFolders) > 0 {
-			err := service.CopyFolder(c.Request.Context(), toFolder, ownFolders)
+			totalSize, err := service.CopyFolder(c.Request.Context(), toFolder, ownFolders)
 			if err != nil {
 				_ = c.Error(err)
 				return
 			}
+			totalFileSize += totalSize
+		}
+	}
+	auth := middleware.LoggedUser(c)
+	if totalFileSize > 0 {
+		err = service.UserUpdateUsedStorage(c.Request.Context(), authId, totalFileSize+auth.UsedStorage)
+		if err != nil {
+			_ = c.Error(err)
+			return
 		}
 	}
 

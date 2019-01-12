@@ -40,20 +40,28 @@ func (f *dbFile) RenameFile(folderId, fileId int64, newName string) (err error) 
 	return err
 }
 
-func (f *dbFile) CopyFile(fromId, toId int64, fileIds []int64) (err error) {
+func (f *dbFile) CopyFile(fromId, toId int64, fileIds []int64) (totalSize uint64, err error) {
 	// 复制指定的文件索引并插入(创建)到指定目录
 	// 不能用 IN  因为只要有一个文件已存在就会导致所有文件都不会被复制,因此这里必须循环检测每个文件是否已经存在
 	// EXPLAIN INSERT INTO `folder_files` SELECT 4,`file_id`,`filename` FROM `folder_files` WHERE (`folder_id` = '1' AND `file_id` IN ('1','2')) AND NOT EXISTS (SELECT * FROM `folder_files` WHERE `folder_id` = '4' AND `file_id` IN ('1','2'))
 	sql := "INSERT INTO `folder_files` " +
 		"SELECT ?,`file_id`,`filename` FROM `folder_files` WHERE (`folder_id` = ? AND `file_id` = ?) AND " +
 		"NOT EXISTS (SELECT `folder_id` FROM `folder_files` WHERE `folder_id` = ? AND `file_id` = ?)"
+	savedFileIds := make([]int64, 0, len(fileIds))
 	for _, fileId := range fileIds {
-		err = f.db.Exec(sql, toId, fromId, fileId, toId, fileId).Error
-		if err != nil {
-			return err
+		rowsAffected := f.db.Exec(sql, toId, fromId, fileId, toId, fileId).RowsAffected
+		if rowsAffected > 0 {
+			savedFileIds = append(savedFileIds, fileId)
 		}
 	}
-	return nil
+	if len(savedFileIds) > 0 {
+		files := make([]*model.File, 0, len(savedFileIds))
+		f.db.Model(model.File{}).Where("id IN (?) ", savedFileIds).First(&files)
+		for _, file := range files {
+			totalSize += uint64(file.Size)
+		}
+	}
+	return
 }
 
 func (f *dbFile) MoveFile(fromId, toId int64, fileIds []int64) (err error) {

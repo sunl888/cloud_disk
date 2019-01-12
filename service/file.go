@@ -21,7 +21,7 @@ func MoveFile(ctx context.Context, fromId, toId int64, fileIds []int64) (err err
 	return FromContext(ctx).MoveFile(fromId, toId, fileIds)
 }
 
-func CopyFile(ctx context.Context, fromId, toId int64, fileIds []int64) (err error) {
+func CopyFile(ctx context.Context, fromId, toId int64, fileIds []int64) (totalSize uint64, err error) {
 	return FromContext(ctx).CopyFile(fromId, toId, fileIds)
 }
 

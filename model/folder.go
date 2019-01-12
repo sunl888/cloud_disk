@@ -36,7 +36,7 @@ type FolderStore interface {
 	// 移动目录
 	MoveFolder(to *Folder, ids []int64) (err error)
 	// 复制目录
-	CopyFolder(to *Folder, foders []*Folder) (err error)
+	CopyFolder(to *Folder, foders []*Folder) (totalSize uint64, err error)
 	// 重命名目录
 	RenameFolder(id int64, newName string) (err error)
 	// 目录列表

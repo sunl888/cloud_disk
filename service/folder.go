@@ -33,7 +33,7 @@ func MoveFolder(ctx context.Context, to *model.Folder, ids []int64) (err error) 
 	return FromContext(ctx).MoveFolder(to, ids)
 }
 
-func CopyFolder(ctx context.Context, to *model.Folder, foders []*model.Folder) (err error) {
+func CopyFolder(ctx context.Context, to *model.Folder, foders []*model.Folder) (totalSize uint64, err error) {
 	return FromContext(ctx).CopyFolder(to, foders)
 }
 

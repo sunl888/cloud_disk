@@ -23,7 +23,7 @@ type FileStore interface {
 	// 移动文件
 	MoveFile(fromId, toId int64, fileIds []int64) (err error)
 	// 复制文件
-	CopyFile(fromId, toId int64, fileIds []int64) (err error)
+	CopyFile(fromId, toId int64, fileIds []int64) (totalSize uint64, err error)
 	// 重命名文件
 	RenameFile(folderId, fileId int64, newName string) (err error)
 	// 加载文件
