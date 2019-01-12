@@ -6,7 +6,7 @@ import (
 	"github.com/wq1019/cloud_disk/handler/middleware"
 	"github.com/wq1019/cloud_disk/model"
 	"github.com/wq1019/cloud_disk/service"
-	"github.com/zm-dev/go-file-uploader"
+	"github.com/wq1019/go-file-uploader"
 	"net/http"
 	"strings"
 )
@@ -54,24 +54,41 @@ func (uf *uploadFile) UploadFile(c *gin.Context) {
 		return
 	}
 	defer uploadFile.Close()
-	uFile, err := uf.u.Upload(go_file_uploader.FileHeader{Filename: fh.Filename, Size: fh.Size, File: uploadFile}, "")
-	if err != nil {
-		_ = c.Error(errors.InternalServerError("上传失败", err))
-		return
-	}
-	fileModel := convert2FileModel(uFile)
-	err = service.SaveFileToFolder(c.Request.Context(), fileModel, folder)
+	isExist, err := service.ExistFile(c.Request.Context(), fh.Filename, l.FolderId, authId)
 	if err != nil {
 		_ = c.Error(err)
 		return
 	}
-	// 更新用户已使用的空间
-	err = service.UserUpdateUsedStorage(c.Request.Context(), authId, newTotalSize)
-	if err != nil {
-		_ = c.Error(err)
+	if isExist {
+		_ = c.Error(errors.FileAlreadyExist("上传失败, 该目录下存在同名文件"))
 		return
+	} else {
+		uFile, err := uf.u.Upload(go_file_uploader.FileHeader{Filename: fh.Filename, Size: fh.Size, File: uploadFile}, "")
+		if err != nil {
+			_ = c.Error(errors.InternalServerError("上传失败", err))
+			return
+		}
+		var fileModel *model.File
+		// hash相同文件名不同, 虽然不用上传文件, 但是需要创建一个不同的folder<->file_name关系
+		if uFile.Filename != fh.Filename {
+			uFile.Filename = fh.Filename
+			fileModel = convert2FileModel(uFile)
+		} else {
+			fileModel = convert2FileModel(uFile)
+		}
+		err = service.SaveFileToFolder(c.Request.Context(), fileModel, folder)
+		if err != nil {
+			_ = c.Error(err)
+			return
+		}
+		// 更新用户已使用的空间
+		err = service.UserUpdateUsedStorage(c.Request.Context(), authId, newTotalSize)
+		if err != nil {
+			_ = c.Error(err)
+			return
+		}
+		c.JSON(http.StatusCreated, fileModel)
 	}
-	c.JSON(http.StatusCreated, fileModel)
 }
 
 func (uf *uploadFile) ShowFile(c *gin.Context) {
@@ -87,12 +104,11 @@ func (uf *uploadFile) ShowFile(c *gin.Context) {
 
 func convert2FileModel(upload *go_file_uploader.FileModel) *model.File {
 	return &model.File{
-		Hash:      upload.Hash,
-		Format:    upload.Format,
-		Filename:  upload.Filename,
-		Size:      upload.Size,
-		CreatedAt: upload.CreatedAt,
-		UpdatedAt: upload.UpdatedAt,
+		Id:       upload.Id,
+		Hash:     upload.Hash,
+		Format:   upload.Format,
+		Filename: upload.Filename,
+		Size:     upload.Size,
 	}
 }
 

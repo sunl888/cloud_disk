@@ -7,7 +7,7 @@ import (
 	"github.com/wq1019/cloud_disk/config"
 	"github.com/wq1019/cloud_disk/pkg/pubsub"
 	"github.com/wq1019/cloud_disk/service"
-	"github.com/zm-dev/go-file-uploader"
+	"github.com/wq1019/go-file-uploader"
 	"github.com/zm-dev/go-image_uploader"
 	"github.com/zm-dev/go-image_uploader/image_url"
 	"go.uber.org/zap"

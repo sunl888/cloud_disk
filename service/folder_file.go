@@ -17,6 +17,10 @@ func LoadFolderFilesByFolderIdAndFileIds(ctx context.Context, folderId int64, fi
 	return FromContext(ctx).LoadFolderFilesByFolderIdAndFileIds(folderId, fileIds, userId)
 }
 
+func ExistFile(ctx context.Context, filename string, folderId, userId int64) (isExist bool, err error) {
+	return FromContext(ctx).ExistFile(filename, folderId, userId)
+}
+
 func NewFolderFileService(fs model.FolderFileStore) model.FolderFileService {
 	return &folderFileService{fs}
 }

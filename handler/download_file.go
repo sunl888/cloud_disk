@@ -7,7 +7,7 @@ import (
 	"github.com/wq1019/cloud_disk/handler/middleware"
 	"github.com/wq1019/cloud_disk/model"
 	"github.com/wq1019/cloud_disk/service"
-	uploader "github.com/zm-dev/go-file-uploader"
+	uploader "github.com/wq1019/go-file-uploader"
 	"io"
 	"net/http"
 	"strconv"

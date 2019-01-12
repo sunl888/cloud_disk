@@ -10,8 +10,6 @@ type dbFile struct {
 	db *gorm.DB
 }
 
-//SELECT f.id... FROM folders fo LEFT JOIN `folder_files` ff ON ff.folder_id = fo.id LEFT JOIN `files` f ON f.id = ff.file_id
-// WHERE (fo.id = '1' AND fo.user_id = '1' AND ff.file_id = '2') LIMIT 1
 func (f *dbFile) LoadFile(folderId, fileId, userId int64) (file *model.File, err error) {
 	file = &model.File{}
 	err = f.db.Table("folders fo").
@@ -30,12 +28,18 @@ func (f *dbFile) LoadFile(folderId, fileId, userId int64) (file *model.File, err
 }
 
 func (f *dbFile) RenameFile(folderId, fileId int64, newName string) (err error) {
-	err = f.db.Model(model.FolderFile{}).
-		Where("folder_id = ? AND file_id = ?", folderId, fileId).
-		Update("filename", newName).
-		Error
-	if gorm.IsRecordNotFoundError(err) {
-		err = errors.RecordNotFound("文件不存在")
+	var count int
+	f.db.Model(model.FolderFile{}).Where("folder_id = ? AND filename = ?", folderId, newName).Limit(1).Count(&count)
+	if count > 0 {
+		return errors.FileAlreadyExist("该目录下已经存在同名文件")
+	} else {
+		err = f.db.Model(model.FolderFile{}).
+			Where("folder_id = ? AND file_id = ?", folderId, fileId).
+			Update("filename", newName).
+			Error
+		if gorm.IsRecordNotFoundError(err) {
+			err = errors.RecordNotFound("文件不存在")
+		}
 	}
 	return err
 }
@@ -79,29 +83,12 @@ func (f *dbFile) DeleteFile(ids []int64, folderId int64) (err error) {
 }
 
 func (f *dbFile) SaveFileToFolder(file *model.File, folder *model.Folder) (err error) {
-	err = f.db.First(&file, "`hash` = ?", file.Hash).Error
-	if gorm.IsRecordNotFoundError(err) {
-		err = errors.RecordNotFound("文件不存在")
-	}
-	var (
-		count int8
-	)
-	f.db.Model(model.FolderFile{}).
-		Where("folder_id = ? AND file_id = ?", folder.Id, file.Id).
-		Limit(1).
-		Count(&count)
-
-	// 文件已经存在
-	if count > 0 {
-		return errors.FileAlreadyExist(nil)
-	} else {
-		err = f.db.Model(model.File{}).Create(
-			&model.FolderFile{
-				FolderId: folder.Id,
-				FileId:   file.Id,
-				Filename: file.Filename,
-			}).Error
-	}
+	err = f.db.Model(model.File{}).Create(
+		&model.FolderFile{
+			FolderId: folder.Id,
+			FileId:   file.Id,
+			Filename: file.Filename,
+		}).Error
 	return
 }
 

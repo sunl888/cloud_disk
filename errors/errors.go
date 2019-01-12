@@ -47,8 +47,14 @@ func RecordNotFound(message string) error {
 }
 
 // 文件已存在
-func FileAlreadyExist(err error) error {
-	return gerrors.New(10007, 400, "file already existed", err)
+func FileAlreadyExist(message ...string) error {
+	var msg string
+	if len(message) == 0 {
+		msg = "文件已存在"
+	} else {
+		msg = message[0]
+	}
+	return gerrors.New(10007, 400, msg, nil)
 }
 
 // 没有权限

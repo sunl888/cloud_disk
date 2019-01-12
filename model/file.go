@@ -7,7 +7,7 @@ import (
 type File struct {
 	Id        int64     `gorm:"type:BIGINT AUTO_INCREMENT;PRIMARY_KEY;NOT NUll" json:"id"` // ID
 	Filename  string    `gorm:"type:char(255); NOT NULL" json:"filename"`                  // 文件名称
-	Hash      string    `gorm:"type:varchar(32);NOT NULL" json:"hash"`                     // 文件Hash
+	Hash      string    `gorm:"type:varchar(32);INDEX;NOT NULL" json:"hash"`               // 文件Hash
 	Format    string    `gorm:"type:varchar(255);NOT NULL" json:"format"`                  // 文件MimeType 例如: video/mp4 -> .mp4
 	Extra     string    `gorm:"NOT NULL;type:TEXT" json:"extra"`                           // extra
 	Size      int64     `gorm:"type:BIGINT" json:"size"`                                   // 文件大小

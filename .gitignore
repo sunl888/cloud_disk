@@ -3,3 +3,4 @@
 data/*
 .env
 docs/swagger
+vendor/

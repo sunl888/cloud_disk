@@ -24,6 +24,8 @@ type FolderFileStore interface {
 	LoadFolderFilesByFolderIds(folderIds []int64, userId int64) (folderFiles []*WrapFolderFile, err error)
 	// 加载指定目录的指定文件s的详细信息
 	LoadFolderFilesByFolderIdAndFileIds(folderId int64, fileIds []int64, userId int64) (folderFiles []*WrapFolderFile, err error)
+	// 是否存在
+	ExistFile(filename string, folderId, userId int64) (isExist bool, err error)
 }
 
 type FolderFileService interface {

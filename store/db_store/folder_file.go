@@ -59,6 +59,18 @@ func (f *dbFolderFile) LoadFolderFilesByFolderIds(folderIds []int64, userId int6
 	return folderFiles, err
 }
 
+func (f *dbFolderFile) ExistFile(filename string, folderId, userId int64) (isExist bool, err error) {
+	var count int
+	err = f.db.Table("folders fo").
+		Joins("LEFT JOIN `folder_files` ff ON ff.folder_id = fo.id").
+		Where("fo.id = ? AND fo.user_id = ? AND ff.filename = ?", folderId, userId, filename).Limit(1).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, err
+}
+
 func NewDBFolderFile(db *gorm.DB) model.FolderFileStore {
 	return &dbFolderFile{db}
 }
