@@ -93,27 +93,52 @@ func (uf *uploadFile) UploadFile(c *gin.Context) {
 	c.JSON(http.StatusCreated, fileModel)
 }
 
-func (uf *uploadFile) Upload(c *gin.Context) {
-	l := struct {
-		FolderId    int64  `json:"folder_id" form:"folder_id"`
-		ChunkIndex  int64  `json:"chunk_index" form:"chunk_index"`
-		TotalChunk  int64  `json:"total_chunk" form:"total_chunk"`
-		TotalSize   int64  `json:"total_size" form:"total_size"`
-		FileHash    string `json:"file_hash" form:"file_hash"`
-		IsLastChunk bool   `json:"is_last_chunk" form:"is_last_chunk"`
-		Filename    string `json:"filename" form:"filename"`
-	}{}
-	if err := c.ShouldBind(&l); err != nil {
-		_ = c.Error(errors.BindError(err))
+type FormData struct {
+	FolderId    int64  `json:"folder_id" form:"folder_id"`
+	ChunkIndex  int64  `json:"chunk_index" form:"chunk_index"`
+	TotalChunk  int64  `json:"total_chunk" form:"total_chunk"`
+	TotalSize   int64  `json:"total_size" form:"total_size"`
+	FileHash    string `json:"file_hash" form:"file_hash"`
+	IsLastChunk bool   `json:"is_last_chunk" form:"is_last_chunk"`
+	Filename    string `json:"filename" form:"filename"`
+}
+
+func validForm(l *FormData) (ok bool, err error) {
+	ok = false
+	err = nil
+	if l.Filename == "" {
+		err = errors.BadRequest("filename 不存在", nil)
+		return
+	}
+	if l.FileHash == "" {
+		err = errors.BadRequest("filehash 不存在", nil)
+		return
+	}
+	if l.TotalSize <= 0 {
+		err = errors.BadRequest("totalSize 必须大于 0", nil)
 		return
 	}
 	// 验证传入的 chunk 是否合法
 	if l.ChunkIndex > l.TotalChunk || l.ChunkIndex < 1 {
-		_ = c.Error(errors.BadRequest("chunk 必须大于 0 小于等于 total chunk", nil))
+		err = errors.BadRequest("chunk 必须大于 0 小于等于 totalChunk", nil)
 		return
 	}
 	if l.FolderId == 0 {
-		_ = c.Error(errors.BadRequest("请指定上传的文件夹", nil))
+		err = errors.BadRequest("请指定上传的文件夹", nil)
+		return
+	}
+	return true, nil
+}
+
+func (uf *uploadFile) UploadV2(c *gin.Context) {
+	l := FormData{}
+	if err := c.ShouldBind(&l); err != nil {
+		_ = c.Error(errors.BindError(err))
+		return
+	}
+	// 验证表单
+	if ok, err := validForm(&l); !ok {
+		_ = c.Error(err)
 		return
 	}
 	authId := middleware.UserId(c)
@@ -145,7 +170,8 @@ func (uf *uploadFile) Upload(c *gin.Context) {
 	var (
 		tmpDir = os.TempDir()
 	)
-	tmpFile, err := os.OpenFile(fmt.Sprintf("%s/%s-%d", tmpDir, l.FileHash, l.ChunkIndex), os.O_CREATE|os.O_WRONLY, 0644)
+	// 写入临时文件, 存在则覆盖
+	tmpFile, err := os.OpenFile(fmt.Sprintf("%s/%s-%d", tmpDir, l.FileHash, l.ChunkIndex), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		_ = c.Error(errors.InternalServerError(fmt.Sprintf("上传第%d个数据块失败: %+v", l.ChunkIndex, err), err))
 		return
@@ -163,13 +189,20 @@ func (uf *uploadFile) Upload(c *gin.Context) {
 		})
 		return
 	} else if l.IsLastChunk == true && l.TotalChunk == l.ChunkIndex {
+		tmpFilePath := fmt.Sprintf("%s/%s", tmpDir, l.FileHash)
+		// 如果文件存在则删除他
+		_, err := os.Stat(tmpFilePath)
+		if err == nil {
+			os.Remove(tmpFilePath)
+		}
 		// 合并所有数据块 mode: 0644 - 0022 = 622  这个model 必须是 622 否则在最后验证 hash 的时候会和源文件不一致
-		file, err := os.OpenFile(fmt.Sprintf("%s/%s", tmpDir, l.Filename), os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644)
+		file, err := os.OpenFile(tmpFilePath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644)
 		if err != nil {
 			_ = c.Error(errors.InternalServerError(fmt.Sprintf("创建待合并的文件失败:%+v", err), err))
 			return
 		}
 		defer file.Close()
+		// 合并所有数据块
 		for i := int64(1); i <= l.TotalChunk; i++ {
 			tmpChunkFileName := fmt.Sprintf("%s/%s-%d", tmpDir, l.FileHash, i)
 			f, err := os.Open(tmpChunkFileName)
@@ -214,11 +247,11 @@ func (uf *uploadFile) Upload(c *gin.Context) {
 		// 计算上传的文件大小是否超过用户可使用的总大小
 		newTotalSize := uint64(fileStat.Size()) + auth.UsedStorage
 		if newTotalSize > auth.Group.MaxStorage {
-			_ = c.Error(errors.BadRequest("您的空间已经用完啦, 快去求求攻城狮大哥吧 ^_^", err))
+			_ = c.Error(errors.BadRequest("您的免费空间已经用完啦, 赶紧提升您的用户等级吧 ^_^", err))
 			return
 		}
 		// 上传到 minio
-		uFile, err := uf.u.Upload(go_file_uploader.FileHeader{Filename: fileStat.Name(), Size: fileStat.Size(), File: file}, "")
+		uFile, err := uf.u.Upload(go_file_uploader.FileHeader{Filename: l.Filename, Size: fileStat.Size(), File: file}, "")
 		if err != nil {
 			_ = c.Error(errors.InternalServerError(fmt.Sprintf("上传失败: %+v", err), err))
 			return
@@ -230,8 +263,8 @@ func (uf *uploadFile) Upload(c *gin.Context) {
 		}
 		var fileModel *model.File
 		// hash相同文件名不同, 虽然不用上传文件, 但是需要创建一个不同的folder<->file_name关系
-		if uFile.Filename != fileStat.Name() {
-			uFile.Filename = fileStat.Name()
+		if uFile.Filename != l.Filename {
+			uFile.Filename = l.Filename
 			fileModel = convert2FileModel(uFile)
 		} else {
 			fileModel = convert2FileModel(uFile)
