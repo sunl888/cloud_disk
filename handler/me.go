@@ -15,7 +15,7 @@ type meHandler struct {
 
 func (m *meHandler) Show(c *gin.Context) {
 	uid := middleware.UserId(c)
-	user, err := service.UserLoad(c.Request.Context(), uid)
+	user, err := service.UserLoadAndRelated(c.Request.Context(), uid)
 	if err != nil {
 		_ = c.Error(err)
 		return

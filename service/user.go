@@ -88,6 +88,10 @@ func UserLoad(ctx context.Context, id int64) (*model.User, error) {
 	return FromContext(ctx).UserLoad(id)
 }
 
+func UserLoadAndRelated(ctx context.Context, id int64) (*model.User, error) {
+	return FromContext(ctx).UserLoadAndRelated(id)
+}
+
 func UserLogin(ctx context.Context, account, password string) (*model.Ticket, error) {
 	return FromContext(ctx).UserLogin(account, password)
 }

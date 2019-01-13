@@ -32,7 +32,14 @@ func (u *dbUser) UserLoad(id int64) (user *model.User, err error) {
 	if gorm.IsRecordNotFoundError(err) {
 		err = model.ErrUserNotExist
 	}
+	return
+}
 
+func (u *dbUser) UserLoadAndRelated(userId int64) (user *model.User, err error) {
+	user, err = u.UserLoad(userId)
+	if err != nil {
+		return
+	}
 	group := &model.Group{}
 	err = u.db.Where("id = ?", user.GroupId).First(&group).Error
 	if gorm.IsRecordNotFoundError(err) {

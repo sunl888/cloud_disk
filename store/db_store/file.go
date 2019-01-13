@@ -141,10 +141,10 @@ func (f *dbFile) DeleteFile(ids []int64, folderId int64) (err error) {
 	return
 }
 
-func (f *dbFile) SaveFileToFolder(file *model.File, folder *model.SimpleFolder) (err error) {
+func (f *dbFile) SaveFileToFolder(file *model.File, folderId int64) (err error) {
 	err = f.db.Model(model.File{}).Create(
 		&model.FolderFile{
-			FolderId:     folder.Id,
+			FolderId:     folderId,
 			OriginFileId: file.Id,
 			Filename:     file.Filename,
 		}).Error

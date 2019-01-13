@@ -20,6 +20,16 @@ type uploadFile struct {
 	u go_file_uploader.Uploader
 }
 
+type FormData struct {
+	FolderId    int64  `json:"folder_id" form:"folder_id"`
+	ChunkIndex  int64  `json:"chunk_index" form:"chunk_index"`
+	TotalChunk  int64  `json:"total_chunk" form:"total_chunk"`
+	TotalSize   int64  `json:"total_size" form:"total_size"`
+	FileHash    string `json:"file_hash" form:"file_hash"`
+	IsLastChunk bool   `json:"is_last_chunk" form:"is_last_chunk"`
+	Filename    string `json:"filename" form:"filename"`
+}
+
 func (uf *uploadFile) UploadFile(c *gin.Context) {
 	l := struct {
 		FolderId int64 `json:"folder_id" form:"folder_id"`
@@ -42,7 +52,7 @@ func (uf *uploadFile) UploadFile(c *gin.Context) {
 		_ = c.Error(errors.Unauthorized("没有访问权限"))
 		return
 	}
-	auth, err := service.UserLoad(c.Request.Context(), authId)
+	auth, err := service.UserLoadAndRelated(c.Request.Context(), authId)
 	if err != nil {
 		_ = c.Error(err)
 		return
@@ -79,7 +89,7 @@ func (uf *uploadFile) UploadFile(c *gin.Context) {
 	} else {
 		fileModel = convert2FileModel(uFile)
 	}
-	err = service.SaveFileToFolder(c.Request.Context(), fileModel, folder)
+	err = service.SaveFileToFolder(c.Request.Context(), fileModel, l.FolderId)
 	if err != nil {
 		_ = c.Error(err)
 		return
@@ -91,16 +101,6 @@ func (uf *uploadFile) UploadFile(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, fileModel)
-}
-
-type FormData struct {
-	FolderId    int64  `json:"folder_id" form:"folder_id"`
-	ChunkIndex  int64  `json:"chunk_index" form:"chunk_index"`
-	TotalChunk  int64  `json:"total_chunk" form:"total_chunk"`
-	TotalSize   int64  `json:"total_size" form:"total_size"`
-	FileHash    string `json:"file_hash" form:"file_hash"`
-	IsLastChunk bool   `json:"is_last_chunk" form:"is_last_chunk"`
-	Filename    string `json:"filename" form:"filename"`
 }
 
 func validForm(l *FormData) (ok bool, err error) {
@@ -141,22 +141,30 @@ func (uf *uploadFile) UploadV2(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-	authId := middleware.UserId(c)
-	// 判断用户有没有上传到该目录的权限
-	folder, err := service.LoadSimpleFolder(c.Request.Context(), l.FolderId, authId)
-	if err != nil {
-		_ = c.Error(err)
-		return
-	}
-	if authId != folder.UserId {
-		_ = c.Error(errors.Unauthorized("该目录没有访问权限"))
-		return
-	}
-	// 判断目录是否存在同名文件
-	for _, file := range folder.Files {
-		if file.Filename == l.Filename {
-			_ = c.Error(errors.FileAlreadyExist("上传失败, 该目录下存在同名文件"))
+	var (
+		authId int64          // 没必要每次都获取 authID, 第一次上传和最后一次上传时获取一下就可以
+		err    error          // err
+		tmpDir = os.TempDir() // 临时目录
+	)
+	// 第一次上传或者最后一次上传时都检查有没有权限
+	if l.ChunkIndex == 1 || l.IsLastChunk == true {
+		authId = middleware.UserId(c)
+		// 判断用户有没有上传到该目录的权限
+		folder, err := service.LoadSimpleFolder(c.Request.Context(), l.FolderId, authId)
+		if err != nil {
+			_ = c.Error(err)
 			return
+		}
+		if authId != folder.UserId {
+			_ = c.Error(errors.Unauthorized("该目录没有访问权限"))
+			return
+		}
+		// 判断目录是否存在同名文件
+		for _, file := range folder.Files {
+			if file.Filename == l.Filename {
+				_ = c.Error(errors.FileAlreadyExist("上传失败, 该目录下存在同名文件"))
+				return
+			}
 		}
 	}
 	// 从 form-data 中获取数据块
@@ -167,16 +175,19 @@ func (uf *uploadFile) UploadV2(c *gin.Context) {
 	}
 	defer postChunkData.Close()
 
-	var (
-		tmpDir = os.TempDir()
-	)
 	// 写入临时文件, 存在则覆盖
 	tmpFile, err := os.OpenFile(fmt.Sprintf("%s/%s-%d", tmpDir, l.FileHash, l.ChunkIndex), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		_ = c.Error(errors.InternalServerError(fmt.Sprintf("上传第%d个数据块失败: %+v", l.ChunkIndex, err), err))
 		return
 	}
-	_, err = io.Copy(tmpFile, postChunkData)
+	buff, err := ioutil.ReadAll(postChunkData)
+	if err != nil {
+		_ = c.Error(errors.InternalServerError(fmt.Sprintf("读取数据块失败: %+v", err), err))
+		return
+	}
+	_, err = tmpFile.Write(buff)
+	//_, err = io.Copy(tmpFile, postChunkData)
 	if err != nil {
 		_ = c.Error(errors.InternalServerError(fmt.Sprintf("上传第%d个数据块失败: %+v", l.ChunkIndex, err), err))
 		return
@@ -188,7 +199,7 @@ func (uf *uploadFile) UploadV2(c *gin.Context) {
 			"message": "上传数据块成功",
 		})
 		return
-	} else if l.IsLastChunk == true && l.TotalChunk == l.ChunkIndex {
+	} else if l.TotalChunk == l.ChunkIndex {
 		tmpFilePath := fmt.Sprintf("%s/%s", tmpDir, l.FileHash)
 		// 如果文件存在则删除他
 		_, err := os.Stat(tmpFilePath)
@@ -211,6 +222,7 @@ func (uf *uploadFile) UploadV2(c *gin.Context) {
 				_ = c.Error(errors.InternalServerError(fmt.Sprintf("读取第%d个数据块失败: %+v", i, err), err))
 				return
 			}
+			// TODO 性能不知道怎么样
 			_, err = file.WriteAt(fBytes, 0)
 			if err != nil {
 				_ = c.Error(errors.InternalServerError(fmt.Sprintf("写入第%d个数据块失败: %+v", l.ChunkIndex, err), err))
@@ -239,7 +251,7 @@ func (uf *uploadFile) UploadV2(c *gin.Context) {
 			return
 		}
 		// auth info
-		auth, err := service.UserLoad(c.Request.Context(), authId)
+		auth, err := service.UserLoadAndRelated(c.Request.Context(), authId)
 		if err != nil {
 			_ = c.Error(err)
 			return
@@ -269,7 +281,7 @@ func (uf *uploadFile) UploadV2(c *gin.Context) {
 		} else {
 			fileModel = convert2FileModel(uFile)
 		}
-		err = service.SaveFileToFolder(c.Request.Context(), fileModel, folder)
+		err = service.SaveFileToFolder(c.Request.Context(), fileModel, l.FolderId)
 		if err != nil {
 			_ = c.Error(err)
 			return

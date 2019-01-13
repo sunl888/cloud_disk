@@ -32,6 +32,7 @@ type UserStore interface {
 	UserCreate(user *User) error
 	UserList(offset, limit int64) (user []*User, count int64, err error)
 	UserListByUserIds(userIds []interface{}) ([]*User, error)
+	UserLoadAndRelated(userId int64) (user *User, err error)
 }
 
 type UserService interface {
