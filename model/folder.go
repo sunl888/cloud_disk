@@ -18,6 +18,20 @@ type Folder struct {
 	UpdatedAt  time.Time `json:"updated_at"`                                                // 更新时间
 }
 
+type SimpleFile struct {
+	Id       int64  `json:"id"`
+	Filename string `json:"filename"`
+}
+type SimpleFolder struct {
+	Id         int64         `json:"id"`
+	FolderName string        `json:"folder_name"`
+	ParentId   int64         `json:"parent_id"`
+	UserId     int64         `json:"user_id"`
+	Files      []*SimpleFile `json:"files"`
+	CreatedAt  time.Time     `json:"created_at"`
+	UpdatedAt  time.Time     `json:"updated_at"`
+}
+
 const (
 	FolderKeyPrefix = "-"
 )
@@ -31,6 +45,8 @@ type FolderStore interface {
 	ExistFolder(userId, parentId int64, folderName string) (isExist bool)
 	// 当 id != 0 则表示加载指定目录, 当 id == 0 则表示加载根目录
 	LoadFolder(id, userId int64, isLoadRelated bool) (folder *Folder, err error)
+	// 只加载目录和下面的文件
+	LoadSimpleFolder(id, userId int64) (folder *SimpleFolder, err error)
 	// 删除指定目录
 	DeleteFolder(ids []int64, userId int64) (err error)
 	// 移动目录

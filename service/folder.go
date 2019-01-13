@@ -16,6 +16,9 @@ func ListFolder(ctx context.Context, folderIds []int64, userId int64) (folder []
 func LoadFolder(ctx context.Context, id, userId int64, isLoadRelated bool) (folder *model.Folder, err error) {
 	return FromContext(ctx).LoadFolder(id, userId, isLoadRelated)
 }
+func LoadSimpleFolder(ctx context.Context, id, userId int64) (folder *model.SimpleFolder, err error) {
+	return FromContext(ctx).LoadSimpleFolder(id, userId)
+}
 
 func CreateFolder(ctx context.Context, folder *model.Folder) (err error) {
 	return FromContext(ctx).CreateFolder(folder)

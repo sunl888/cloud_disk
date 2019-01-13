@@ -17,7 +17,7 @@ type File struct {
 
 type FileStore interface {
 	// 保存文件到指定目录
-	SaveFileToFolder(file *File, folder *Folder) (err error)
+	SaveFileToFolder(file *File, folder *SimpleFolder) (err error)
 	// 删除文件
 	DeleteFile(ids []int64, folderId int64) (err error)
 	// 移动文件

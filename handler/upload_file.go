@@ -33,7 +33,7 @@ func (uf *uploadFile) UploadFile(c *gin.Context) {
 		return
 	}
 	authId := middleware.UserId(c)
-	folder, err := service.LoadFolder(c.Request.Context(), l.FolderId, authId, false)
+	folder, err := service.LoadSimpleFolder(c.Request.Context(), l.FolderId, authId)
 	if err != nil {
 		_ = c.Error(err)
 		return
@@ -52,6 +52,13 @@ func (uf *uploadFile) UploadFile(c *gin.Context) {
 		_ = c.Error(errors.BadRequest("请上传文件", err))
 		return
 	}
+	// 判断目录是否存在同名文件
+	for _, file := range folder.Files {
+		if file.Filename == fh.Filename {
+			_ = c.Error(errors.FileAlreadyExist("上传失败, 该目录下存在同名文件"))
+			return
+		}
+	}
 	// 计算上传的文件大小是否超过用户可使用的总大小
 	newTotalSize := uint64(fh.Size) + auth.UsedStorage
 	if newTotalSize > auth.Group.MaxStorage {
@@ -59,41 +66,31 @@ func (uf *uploadFile) UploadFile(c *gin.Context) {
 		return
 	}
 	defer uploadFile.Close()
-	isExist, err := service.ExistFile(c.Request.Context(), fh.Filename, l.FolderId, authId)
+	uFile, err := uf.u.Upload(go_file_uploader.FileHeader{Filename: fh.Filename, Size: fh.Size, File: uploadFile}, "")
+	if err != nil {
+		_ = c.Error(errors.InternalServerError("上传失败", err))
+		return
+	}
+	var fileModel *model.File
+	// hash相同文件名不同, 虽然不用上传文件, 但是需要创建一个不同的folder<->file_name关系
+	if uFile.Filename != fh.Filename {
+		uFile.Filename = fh.Filename
+		fileModel = convert2FileModel(uFile)
+	} else {
+		fileModel = convert2FileModel(uFile)
+	}
+	err = service.SaveFileToFolder(c.Request.Context(), fileModel, folder)
 	if err != nil {
 		_ = c.Error(err)
 		return
 	}
-	if isExist {
-		_ = c.Error(errors.FileAlreadyExist("上传失败, 该目录下存在同名文件"))
+	// 更新用户已使用的空间
+	err = service.UserUpdateUsedStorage(c.Request.Context(), authId, newTotalSize)
+	if err != nil {
+		_ = c.Error(err)
 		return
-	} else {
-		uFile, err := uf.u.Upload(go_file_uploader.FileHeader{Filename: fh.Filename, Size: fh.Size, File: uploadFile}, "")
-		if err != nil {
-			_ = c.Error(errors.InternalServerError("上传失败", err))
-			return
-		}
-		var fileModel *model.File
-		// hash相同文件名不同, 虽然不用上传文件, 但是需要创建一个不同的folder<->file_name关系
-		if uFile.Filename != fh.Filename {
-			uFile.Filename = fh.Filename
-			fileModel = convert2FileModel(uFile)
-		} else {
-			fileModel = convert2FileModel(uFile)
-		}
-		err = service.SaveFileToFolder(c.Request.Context(), fileModel, folder)
-		if err != nil {
-			_ = c.Error(err)
-			return
-		}
-		// 更新用户已使用的空间
-		err = service.UserUpdateUsedStorage(c.Request.Context(), authId, newTotalSize)
-		if err != nil {
-			_ = c.Error(err)
-			return
-		}
-		c.JSON(http.StatusCreated, fileModel)
 	}
+	c.JSON(http.StatusCreated, fileModel)
 }
 
 func (uf *uploadFile) Upload(c *gin.Context) {
@@ -110,6 +107,7 @@ func (uf *uploadFile) Upload(c *gin.Context) {
 		_ = c.Error(errors.BindError(err))
 		return
 	}
+	// 验证传入的 chunk 是否合法
 	if l.ChunkIndex > l.TotalChunk || l.ChunkIndex < 1 {
 		_ = c.Error(errors.BadRequest("chunk 必须大于 0 小于等于 total chunk", nil))
 		return
@@ -119,31 +117,40 @@ func (uf *uploadFile) Upload(c *gin.Context) {
 		return
 	}
 	authId := middleware.UserId(c)
-	folder, err := service.LoadFolder(c.Request.Context(), l.FolderId, authId, false)
+	// 判断用户有没有上传到该目录的权限
+	folder, err := service.LoadSimpleFolder(c.Request.Context(), l.FolderId, authId)
 	if err != nil {
 		_ = c.Error(err)
 		return
 	}
 	if authId != folder.UserId {
-		_ = c.Error(errors.Unauthorized("没有访问权限"))
+		_ = c.Error(errors.Unauthorized("该目录没有访问权限"))
 		return
 	}
-	chunkData, _, err := c.Request.FormFile("file-data")
+	// 判断目录是否存在同名文件
+	for _, file := range folder.Files {
+		if file.Filename == l.Filename {
+			_ = c.Error(errors.FileAlreadyExist("上传失败, 该目录下存在同名文件"))
+			return
+		}
+	}
+	// 从 form-data 中获取数据块
+	postChunkData, _, err := c.Request.FormFile("file-data")
 	if err != nil {
 		_ = c.Error(errors.BadRequest("请上传文件", err))
 		return
 	}
-	defer chunkData.Close()
+	defer postChunkData.Close()
 
 	var (
 		tmpDir = os.TempDir()
 	)
-	tmpFile, err := os.OpenFile(fmt.Sprintf("%s/%s-%d", tmpDir, l.FileHash, l.ChunkIndex), os.O_CREATE|os.O_RDWR, 0644)
+	tmpFile, err := os.OpenFile(fmt.Sprintf("%s/%s-%d", tmpDir, l.FileHash, l.ChunkIndex), os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		_ = c.Error(errors.InternalServerError(fmt.Sprintf("上传第%d个数据块失败: %+v", l.ChunkIndex, err), err))
 		return
 	}
-	_, err = io.Copy(tmpFile, chunkData)
+	_, err = io.Copy(tmpFile, postChunkData)
 	if err != nil {
 		_ = c.Error(errors.InternalServerError(fmt.Sprintf("上传第%d个数据块失败: %+v", l.ChunkIndex, err), err))
 		return
@@ -156,7 +163,7 @@ func (uf *uploadFile) Upload(c *gin.Context) {
 		})
 		return
 	} else if l.IsLastChunk == true && l.TotalChunk == l.ChunkIndex {
-		// 合并所有数据块 mode: 0644 - 0022 = 622
+		// 合并所有数据块 mode: 0644 - 0022 = 622  这个model 必须是 622 否则在最后验证 hash 的时候会和源文件不一致
 		file, err := os.OpenFile(fmt.Sprintf("%s/%s", tmpDir, l.Filename), os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644)
 		if err != nil {
 			_ = c.Error(errors.InternalServerError(fmt.Sprintf("创建待合并的文件失败:%+v", err), err))
@@ -165,17 +172,18 @@ func (uf *uploadFile) Upload(c *gin.Context) {
 		defer file.Close()
 		for i := int64(1); i <= l.TotalChunk; i++ {
 			tmpChunkFileName := fmt.Sprintf("%s/%s-%d", tmpDir, l.FileHash, i)
-			bytes, err := ioutil.ReadFile(tmpChunkFileName)
+			f, err := os.Open(tmpChunkFileName)
+			fBytes, err := ioutil.ReadAll(f)
 			if err != nil {
 				_ = c.Error(errors.InternalServerError(fmt.Sprintf("读取第%d个数据块失败: %+v", i, err), err))
 				return
 			}
-			_, err = file.WriteAt(bytes, 0)
+			_, err = file.WriteAt(fBytes, 0)
 			if err != nil {
 				_ = c.Error(errors.InternalServerError(fmt.Sprintf("写入第%d个数据块失败: %+v", l.ChunkIndex, err), err))
 				return
 			}
-			// 删除临时文件
+			// 删除分片文件
 			err = os.Remove(tmpChunkFileName)
 			if err != nil {
 				log.Printf("移除临时文件失败: %+v", err)
@@ -207,16 +215,6 @@ func (uf *uploadFile) Upload(c *gin.Context) {
 		newTotalSize := uint64(fileStat.Size()) + auth.UsedStorage
 		if newTotalSize > auth.Group.MaxStorage {
 			_ = c.Error(errors.BadRequest("您的空间已经用完啦, 快去求求攻城狮大哥吧 ^_^", err))
-			return
-		}
-		// 判断文件是否存在
-		isExist, err := service.ExistFile(c.Request.Context(), fileStat.Name(), l.FolderId, authId)
-		if err != nil {
-			_ = c.Error(err)
-			return
-		}
-		if isExist {
-			_ = c.Error(errors.FileAlreadyExist("上传失败, 该目录下存在同名文件"))
 			return
 		}
 		// 上传到 minio

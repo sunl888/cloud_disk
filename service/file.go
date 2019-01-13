@@ -9,7 +9,7 @@ type fileService struct {
 	model.FileStore
 }
 
-func SaveFileToFolder(ctx context.Context, file *model.File, folder *model.Folder) (err error) {
+func SaveFileToFolder(ctx context.Context, file *model.File, folder *model.SimpleFolder) (err error) {
 	return FromContext(ctx).SaveFileToFolder(file, folder)
 }
 

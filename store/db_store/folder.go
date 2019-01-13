@@ -274,6 +274,34 @@ func (f *dbFolder) LoadFolder(id, userId int64, isLoadRelated bool) (folder *mod
 	return
 }
 
+func (f *dbFolder) LoadSimpleFolder(id, userId int64) (folder *model.SimpleFolder, err error) {
+	folder = &model.SimpleFolder{}
+	files := make([]*model.SimpleFile, 0, 1)
+
+	if id == 0 {
+		return nil, errors.NotFound("目录 ID 不能为空")
+	}
+	if userId == 0 {
+		return nil, errors.NotFound("用户 ID 不能为空")
+	}
+	q := f.db.Model(model.Folder{})
+	f.db.Table("folders fo").
+		Select("ff.file_id as id, ff.filename").
+		Joins("LEFT JOIN `folder_files` ff ON ff.folder_id = fo.id").
+		Where("fo.id = ?", id).Scan(&files)
+
+	q = q.Where("id = ? AND user_id = ?", id, userId)
+	err = q.Scan(&folder).Error
+	if err != nil {
+		if gorm.IsRecordNotFoundError(err) {
+			err = errors.RecordNotFound("目录不存在")
+		}
+		return nil, err
+	}
+	folder.Files = files
+	return
+}
+
 func updateKey(parentKey, key, startId string) string {
 	keys := strings.Split(key, "-")
 	for index, key := range keys {
