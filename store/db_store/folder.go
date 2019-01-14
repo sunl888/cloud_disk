@@ -190,11 +190,12 @@ func (f *dbFolder) MoveFolder(to *model.Folder, ids []int64) (err error) {
 	return nil
 }
 
-func (f *dbFolder) DeleteFolder(ids []int64, userId int64) (err error) {
+func (f *dbFolder) DeleteFolder(ids []int64, userId int64) (allowDelFileHashList []string, err error) {
 	var (
 		waitDelFolderIds []int64
 		likeSql          string
 	)
+	allowDelFileHashList = make([]string, 0, len(ids)*2)
 	for _, v := range ids {
 		relativeRootFolder := model.Folder{}
 		conditions := fmt.Sprintf("id = %d AND user_id = %d", v, userId)
@@ -203,7 +204,7 @@ func (f *dbFolder) DeleteFolder(ids []int64, userId int64) (err error) {
 			if gorm.IsRecordNotFoundError(err) {
 				continue
 			}
-			return err
+			return nil, err
 		}
 		// 将父目录的 ID 放到待删除的目录列表, 准备删除该目录下面的文件
 		waitDelFolderIds = append(waitDelFolderIds, relativeRootFolder.Id)
@@ -211,15 +212,59 @@ func (f *dbFolder) DeleteFolder(ids []int64, userId int64) (err error) {
 		id2Str := strconv.FormatInt(relativeRootFolder.Id, 10)
 		likeSql += fmt.Sprintf(" `key` LIKE %s OR", "'"+relativeRootFolder.Key+id2Str+"-%'")
 	}
+	if likeSql == "" {
+		return nil, errors.RecordNotFound("没有要删除的记录")
+	}
+	fmt.Println(likeSql)
 	likeSql = strings.TrimRight(likeSql, "OR")
 	f.db.Model(model.Folder{}).
 		Where(likeSql).
 		Pluck("DISTINCT id", &waitDelFolderIds)
+
 	// 删除父目录以及下面的所有子目录
 	f.db.Delete(&model.Folder{}, "id IN (?)", waitDelFolderIds)
+
+	// 统计每个文件的引用次数, 如果该文件只被引用了一次, 则可以去 minio 中将这个文件直接删除
+	var originFileIds []int64
+	f.db.Table("folder_files").Where("folder_id IN (?)", waitDelFolderIds).Pluck("DISTINCT origin_file_id", &originFileIds)
+	//originFileIds = removeRepeatedElement(originFileIds)
+	for _, id := range originFileIds {
+		var count int8
+		f.db.Table("folder_files").
+			Where("`folder_id` NOT IN (?)", waitDelFolderIds).
+			Where("`origin_file_id` = ?", id).
+			Limit(1).Count(&count)
+		// 如果源文件被引用超过一次则表示别的目录或者别的用户也使用了这个文件, 就不用删除该文件, 只要删除该目录和该文件之间的关联即可
+		if count <= 0 {
+			f.db.Table("files").Where("`id` = ?", id).Pluck("`hash`", &allowDelFileHashList)
+		}
+	}
+
 	// 删除父目录下面所有子目录中的文件
 	f.db.Exec("DELETE FROM `folder_files` WHERE folder_id IN (?)", waitDelFolderIds)
-	return nil
+
+	if len(allowDelFileHashList) > 0 {
+		// 在数据库中删除所有被引用了一次的文件
+		f.db.Exec("DELETE FROM `files` WHERE `hash` IN (?)", allowDelFileHashList)
+	}
+	return
+}
+
+func removeRepeatedElement(arr []int64) (newArr []int64) {
+	newArr = make([]int64, 0)
+	for i := 0; i < len(arr); i++ {
+		repeat := false
+		for j := i + 1; j < len(arr); j++ {
+			if arr[i] == arr[j] {
+				repeat = true
+				break
+			}
+		}
+		if !repeat {
+			newArr = append(newArr, arr[i])
+		}
+	}
+	return
 }
 
 func (f *dbFolder) ExistFolder(userId, parentId int64, folderName string) (isExist bool) {

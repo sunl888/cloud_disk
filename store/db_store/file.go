@@ -136,8 +136,42 @@ func (f *dbFile) MoveFile(fromId, toId int64, fileIds []int64) (err error) {
 	return
 }
 
-func (f *dbFile) DeleteFile(ids []int64, folderId int64) (err error) {
-	err = f.db.Exec("DELETE FROM `folder_files` WHERE `folder_id` = ? AND `file_id` IN (?)", folderId, ids).Error
+func (f *dbFile) DeleteFile(ids []int64, folderId int64) (allowDelFileHashList []string, err error) {
+	allowDelFileHashList = make([]string, 0, len(ids))
+	var originIds []int64
+
+	err = f.db.Table("folder_files").
+		Where("`folder_id` = ? AND `file_id` IN (?)", folderId, ids).
+		Pluck("DISTINCT `origin_file_id`", &originIds).
+		Error
+	if err != nil {
+		return
+	}
+	for _, originId := range originIds {
+		var count int8
+		err = f.db.Table("folder_files").
+			Where("`origin_file_id` = ?", originId).
+			Limit(2).
+			Count(&count).
+			Error
+		if err != nil {
+			return
+		}
+		// 如果源文件被引用超过一次则表示别的目录或者别的用户也使用了这个文件, 就不用删除该文件, 只要删除该目录和该文件之间的关联即可
+		if count <= 1 {
+			f.db.Table("files").
+				Where("`id` = ?", originId).
+				Pluck("`hash`", &allowDelFileHashList)
+		}
+	}
+	if len(originIds) > 0 {
+		// 删除目录和文件之间的关联
+		err = f.db.Exec("DELETE FROM `folder_files` WHERE `folder_id` = ? AND `file_id` IN (?)", folderId, ids).Error
+	}
+	if len(allowDelFileHashList) > 0 {
+		// 在数据库中删除所有被引用了一次的文件
+		f.db.Exec("DELETE FROM `files` WHERE `hash` IN (?)", allowDelFileHashList)
+	}
 	return
 }
 

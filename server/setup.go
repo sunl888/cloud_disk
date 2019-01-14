@@ -195,5 +195,7 @@ func SetupServer(configPath string) *Server {
 	s.FileUploader = setupFileUploader(s)
 	s.ImageUploader = setupImageUploader(s)
 	s.ImageUrl = setupImageURL(s)
+	s.BucketName = s.Conf.Minio.BucketName
+	s.MinioClient = setupMinio(s)
 	return s
 }

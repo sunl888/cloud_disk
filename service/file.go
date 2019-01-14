@@ -13,7 +13,7 @@ func SaveFileToFolder(ctx context.Context, file *model.File, folderId int64) (er
 	return FromContext(ctx).SaveFileToFolder(file, folderId)
 }
 
-func DeleteFile(ctx context.Context, ids []int64, folderId int64) (err error) {
+func DeleteFile(ctx context.Context, ids []int64, folderId int64) (allowDelFileHashList []string, err error) {
 	return FromContext(ctx).DeleteFile(ids, folderId)
 }
 

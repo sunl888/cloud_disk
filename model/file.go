@@ -18,8 +18,8 @@ type File struct {
 type FileStore interface {
 	// 保存文件到指定目录
 	SaveFileToFolder(file *File, folderId int64) (err error)
-	// 删除文件
-	DeleteFile(ids []int64, folderId int64) (err error)
+	// 删除文件和目录之间的关联 返回允许删除的文件 Hash 列表
+	DeleteFile(ids []int64, folderId int64) (allowDelFileHashList []string, err error)
 	// 移动文件
 	MoveFile(fromId, toId int64, fileIds []int64) (err error)
 	// 复制文件
@@ -28,6 +28,7 @@ type FileStore interface {
 	RenameFile(folderId, fileId int64, newName string) (err error)
 	// 加载文件
 	LoadFile(folderId, fileId, userId int64) (file *File, err error)
+	//GetHashByFileIds()
 }
 
 type FileService interface {

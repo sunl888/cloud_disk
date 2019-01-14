@@ -28,7 +28,7 @@ func ExistFolder(ctx context.Context, userId, parentId int64, folderName string)
 	return FromContext(ctx).ExistFolder(userId, parentId, folderName)
 }
 
-func DeleteFolder(ctx context.Context, ids []int64, userId int64) (err error) {
+func DeleteFolder(ctx context.Context, ids []int64, userId int64) (allowDelFileHashList []string, err error) {
 	return FromContext(ctx).DeleteFolder(ids, userId)
 }
 

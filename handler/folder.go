@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/minio/minio-go"
 	"github.com/wq1019/cloud_disk/errors"
 	"github.com/wq1019/cloud_disk/handler/middleware"
 	"github.com/wq1019/cloud_disk/model"
@@ -10,7 +12,10 @@ import (
 	"strconv"
 )
 
-type folderHandler struct{}
+type folderHandler struct {
+	minioClient *minio.Client
+	bucketName  string
+}
 
 // RenameFolder godoc
 // @Tags 目录
@@ -152,7 +157,7 @@ func (*folderHandler) CreateFolder(c *gin.Context) {
 // @Success 401 {object} errors.GlobalError "请先登录"
 // @Failure 500 {object} errors.GlobalError
 // @Router /folder [DELETE]
-func (*folderHandler) DeleteSource(c *gin.Context) {
+func (f *folderHandler) DeleteSource(c *gin.Context) {
 	l := struct {
 		FileIds         []int64 `json:"file_ids" form:"file_ids"`
 		FolderIds       []int64 `json:"folder_ids" form:"folder_ids"`
@@ -166,6 +171,8 @@ func (*folderHandler) DeleteSource(c *gin.Context) {
 		_ = c.Error(errors.BadRequest("请指定要删除的文件或者目录ID"))
 		return
 	}
+
+	var fileHashList []string
 	authId := middleware.UserId(c)
 	// 删除指定的文件
 	if len(l.FileIds) > 0 {
@@ -175,19 +182,36 @@ func (*folderHandler) DeleteSource(c *gin.Context) {
 			_ = c.Error(err)
 			return
 		}
-		err = service.DeleteFile(c.Request.Context(), l.FileIds, currentFolder.Id)
+		hashList, err := service.DeleteFile(c.Request.Context(), l.FileIds, currentFolder.Id)
 		if err != nil {
 			_ = c.Error(err)
 			return
+		}
+		for _, v := range hashList {
+			fileHashList = append(fileHashList, v)
 		}
 	}
 	// 删除目录列表
 	if len(l.FolderIds) > 0 {
-		err := service.DeleteFolder(c.Request.Context(), l.FolderIds, authId)
+		hashList, err := service.DeleteFolder(c.Request.Context(), l.FolderIds, authId)
 		if err != nil {
 			_ = c.Error(err)
 			return
 		}
+		for _, v := range hashList {
+			fileHashList = append(fileHashList, v)
+		}
+	}
+	objectsCh := make(chan string)
+	go func() {
+		defer close(objectsCh)
+		for _, hash := range fileHashList {
+			objectsCh <- hash[:2] + "/" + hash[2:]
+		}
+	}()
+
+	for rErr := range f.minioClient.RemoveObjectsWithContext(c.Request.Context(), f.bucketName, objectsCh) {
+		fmt.Println("Error detected during deletion: ", rErr)
 	}
 	c.Status(http.StatusNoContent)
 }
@@ -341,6 +365,6 @@ func (*folderHandler) Copy2Folder(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-func NewFolderHandler() *folderHandler {
-	return &folderHandler{}
+func NewFolderHandler(client *minio.Client, bucketName string) *folderHandler {
+	return &folderHandler{minioClient: client, bucketName: bucketName}
 }

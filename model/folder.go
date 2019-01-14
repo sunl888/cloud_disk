@@ -48,7 +48,7 @@ type FolderStore interface {
 	// 只加载目录和下面的文件
 	LoadSimpleFolder(id, userId int64) (folder *SimpleFolder, err error)
 	// 删除指定目录
-	DeleteFolder(ids []int64, userId int64) (err error)
+	DeleteFolder(ids []int64, userId int64) (allowDelFileHashList []string, err error)
 	// 移动目录
 	MoveFolder(to *Folder, ids []int64) (err error)
 	// 复制目录

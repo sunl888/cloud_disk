@@ -16,7 +16,7 @@ func CreateHTTPHandler(s *server.Server) http.Handler {
 	userHandler := NewUserHandler(s.ImageUrl)
 	uploadFileHandler := NewUploadFileHandler(s.FileUploader)
 	uploadImageHandler := NewUploadImage(s.ImageUploader, s.ImageUrl)
-	folderHandler := NewFolderHandler()
+	folderHandler := NewFolderHandler(s.MinioClient, s.BucketName)
 	fileHandler := NewFileHandler()
 	downloadHandler := NewDownloadHandler(s.FileUploader)
 	groupHandler := NewGroupHandler()

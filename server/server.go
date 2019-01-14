@@ -3,6 +3,7 @@ package server
 import (
 	"github.com/go-redis/redis"
 	"github.com/jinzhu/gorm"
+	"github.com/minio/minio-go"
 	"github.com/spf13/afero"
 	"github.com/wq1019/cloud_disk/config"
 	"github.com/wq1019/cloud_disk/pkg/pubsub"
@@ -26,4 +27,6 @@ type Server struct {
 	FileUploader  go_file_uploader.Uploader
 	ImageUploader image_uploader.Uploader
 	ImageUrl      image_url.URL
+	MinioClient   *minio.Client
+	BucketName    string
 }
