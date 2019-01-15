@@ -262,7 +262,7 @@ func (uf *uploadFile) UploadV2(c *gin.Context) {
 			return
 		}
 		// 上传到 minio
-		uFile, err := uf.u.Upload(go_file_uploader.FileHeader{Filename: l.Filename, Size: fileStat.Size(), File: file}, "")
+		uFile, err := uf.u.UploadChunk(go_file_uploader.FileHeader{Filename: l.Filename, Size: fileStat.Size(), File: file}, "")
 		if err != nil {
 			_ = c.Error(errors.InternalServerError(fmt.Sprintf("上传失败: %+v", err), err))
 			return

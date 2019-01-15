@@ -2,6 +2,8 @@ package server
 
 import (
 	"fmt"
+	nosConfig "github.com/NetEase-Object-Storage/nos-golang-sdk/config"
+	"github.com/NetEase-Object-Storage/nos-golang-sdk/nosclient"
 	"github.com/go-redis/redis"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
@@ -13,7 +15,7 @@ import (
 	"github.com/wq1019/cloud_disk/pkg/pubsub"
 	"github.com/wq1019/cloud_disk/service"
 	"github.com/wq1019/go-file-uploader"
-	fileUploaderMinio "github.com/wq1019/go-file-uploader/minio"
+	fileUploaderNos "github.com/wq1019/go-file-uploader/nos"
 	"github.com/zm-dev/go-image_uploader"
 	"github.com/zm-dev/go-image_uploader/image_url"
 	"go.uber.org/zap"
@@ -90,18 +92,27 @@ func setupFilesystem(fsConfig *config.FilesystemConfig) afero.Fs {
 	}
 }
 
-func setupFileUploader(s *Server) go_file_uploader.Uploader {
-	return fileUploaderMinio.NewMinioUploader(
-		go_file_uploader.HashFunc(go_file_uploader.MD5HashFunc),
-		setupMinio(s),
-		setupFileStore(s),
-		s.Conf.Minio.BucketName,
-		go_file_uploader.Hash2StorageNameFunc(go_file_uploader.TwoCharsPrefixHash2StorageNameFunc),
-	)
-}
-
 func setupFileStore(s *Server) go_file_uploader.Store {
 	return go_file_uploader.NewDBStore(s.DB)
+}
+
+func setupFileUploader(s *Server) go_file_uploader.Uploader {
+	// minio
+	//return fileUploaderMinio.NewMinioUploader(
+	//	go_file_uploader.HashFunc(go_file_uploader.MD5HashFunc),
+	//	setupMinio(s),
+	//	setupFileStore(s),
+	//	s.Conf.Nos.BucketName,
+	//	go_file_uploader.Hash2StorageNameFunc(go_file_uploader.TwoCharsPrefixHash2StorageNameFunc),
+	//)
+	return fileUploaderNos.NewNosUploader(
+		go_file_uploader.HashFunc(go_file_uploader.MD5HashFunc),
+		setupNos(s),
+		setupFileStore(s),
+		s.Conf.Nos.BucketName,
+		go_file_uploader.Hash2StorageNameFunc(go_file_uploader.TwoCharsPrefixHash2StorageNameFunc),
+		s.Conf.Nos.Endpoint,
+	)
 }
 
 func setupMinio(s *Server) *minio.Client {
@@ -118,25 +129,17 @@ func setupMinio(s *Server) *minio.Client {
 	return minioClient
 }
 
-func loadEnv(appEnv string) string {
-	if appEnv == "" {
-		appEnv = "production"
-	}
-	return appEnv
-}
-
-func setupLogger(serv *Server) *zap.Logger {
-	var err error
-	var logger *zap.Logger
-	if serv.Debug {
-		logger, err = zap.NewDevelopment()
-	} else {
-		logger, err = zap.NewProduction()
-	}
+func setupNos(s *Server) *nosclient.NosClient {
+	fmt.Println(s.Conf.Nos.Endpoint)
+	nosClient, err := nosclient.New(&nosConfig.Config{
+		Endpoint:  s.Conf.Nos.Endpoint,
+		AccessKey: s.Conf.Nos.AccessKey,
+		SecretKey: s.Conf.Nos.SecretKey,
+	})
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("nos client 创建失败! error: %+v", err)
 	}
-	return logger
+	return nosClient
 }
 
 func setupImageUploader(s *Server) image_uploader.Uploader {
@@ -173,6 +176,27 @@ func setupImageURL(s *Server) image_url.URL {
 		s.Conf.ImageProxy.OmitBaseUrl == "true",
 		image_uploader.Hash2StorageNameFunc(image_uploader.TwoCharsPrefixHash2StorageNameFunc),
 	)
+}
+
+func loadEnv(appEnv string) string {
+	if appEnv == "" {
+		appEnv = "production"
+	}
+	return appEnv
+}
+
+func setupLogger(serv *Server) *zap.Logger {
+	var err error
+	var logger *zap.Logger
+	if serv.Debug {
+		logger, err = zap.NewDevelopment()
+	} else {
+		logger, err = zap.NewProduction()
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
+	return logger
 }
 
 func SetupServer(configPath string) *Server {

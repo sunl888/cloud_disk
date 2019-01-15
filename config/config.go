@@ -42,6 +42,13 @@ type MinioConfig struct {
 	BucketName string `json:"bucketname"`
 }
 
+type NosConfig struct {
+	Endpoint   string `json:"endpoint"`
+	AccessKey  string `json:"accesskey"`
+	SecretKey  string `json:"secretkey"`
+	BucketName string `json:"bucketname"`
+}
+
 type ImageProxyConfig struct {
 	Host        string
 	OmitBaseUrl string `json:"omitbaseurl"`
@@ -58,6 +65,7 @@ type Config struct {
 	Redis        RedisConfig      `json:"redis"`
 	Ticket       TicketConfig     `json:"ticket"`
 	Minio        MinioConfig      `json:"minio"`
+	Nos          NosConfig        `json:"nos"`
 	ImageProxy   ImageProxyConfig `json:"image-proxy"`
 }
 
