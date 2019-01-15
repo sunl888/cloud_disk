@@ -294,11 +294,6 @@ func (f *dbFolder) LoadFolder(id, userId int64, isLoadRelated bool) (folder *mod
 	files = make([]*model.File, 0, 1)
 	q := f.db.Model(model.Folder{})
 	if isLoadRelated {
-		f.db.Table("folders fo").
-			Select("ff.file_id as id, ff.filename, f.hash, f.format, f.extra, f.size, f.created_at, f.updated_at").
-			Joins("INNER JOIN `folder_files` ff ON ff.folder_id = fo.id").
-			Joins("INNER JOIN `files` f ON f.id = ff.origin_file_id").
-			Where("fo.id = ?", id).Find(&files)
 		q = q.Preload("Folders", "user_id = ?", userId) // 此语句是在 #232 行时才执行的
 	}
 	q = q.Where("user_id = ?", userId)
@@ -314,6 +309,13 @@ func (f *dbFolder) LoadFolder(id, userId int64, isLoadRelated bool) (folder *mod
 			err = errors.RecordNotFound("目录不存在")
 		}
 		return nil, err
+	}
+	if isLoadRelated {
+		f.db.Table("folders fo").
+			Select("ff.file_id as id, ff.filename, f.hash, f.format, f.extra, f.size, f.created_at, f.updated_at").
+			Joins("INNER JOIN `folder_files` ff ON ff.folder_id = fo.id").
+			Joins("INNER JOIN `files` f ON f.id = ff.origin_file_id").
+			Where("fo.id = ?", folder.Id).Find(&files)
 	}
 	folder.Files = files
 	return

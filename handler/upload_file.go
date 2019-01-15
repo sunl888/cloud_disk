@@ -300,6 +300,10 @@ func (uf *uploadFile) UploadV2(c *gin.Context) {
 	}
 }
 
+const (
+	MaxPostFileSize = 40 << 20 // 40 MB
+)
+
 func (uf *uploadFile) UploadV3(c *gin.Context) {
 	l := FormData{}
 	if err := c.ShouldBind(&l); err != nil {
@@ -338,16 +342,18 @@ func (uf *uploadFile) UploadV3(c *gin.Context) {
 		}
 	}
 	// TODO 第一次上传时检查文件是否已存在
-	//
 
 	// 从 form-data 中获取数据块
-	postChunkData, _, err := c.Request.FormFile("file-data")
+	postChunkData, fh, err := c.Request.FormFile("file-data")
 	if err != nil {
 		_ = c.Error(errors.BadRequest("请上传文件", err))
 		return
 	}
 	defer postChunkData.Close()
-
+	if fh.Size > MaxPostFileSize {
+		_ = c.Error(errors.BadRequest("上传失败, 数据块太大"))
+		return
+	}
 	tmpFilePath := fmt.Sprintf("%s/%s", tmpDir, l.FileHash)
 	// 第一次提交如果遇到 /tmp 目录中已经有该文件则删除了再往里面写
 	if l.ChunkIndex == 1 {
@@ -377,7 +383,7 @@ func (uf *uploadFile) UploadV3(c *gin.Context) {
 	// 如果不是最后一个数据块则到这里就上传完成了
 	if l.IsLastChunk == false {
 		c.JSON(http.StatusOK, gin.H{
-			"status":  1, // 上传数据块成功标志
+			"code":    1, // 上传数据块成功标志
 			"message": "上传数据块成功",
 		})
 		return
@@ -418,10 +424,8 @@ func (uf *uploadFile) UploadV3(c *gin.Context) {
 			return
 		}
 		// 删除临时文件
-		err = os.Remove(file.Name())
-		if err != nil {
-			log.Printf("移除临时文件失败: %+v", err)
-		}
+		defer removeTmpFile(file)
+
 		var fileModel *model.File
 		// hash相同文件名不同, 虽然不用上传文件, 但是需要创建一个不同的folder<->file_name关系
 		if uFile.Filename != l.Filename {
@@ -441,12 +445,24 @@ func (uf *uploadFile) UploadV3(c *gin.Context) {
 			_ = c.Error(err)
 			return
 		}
-		c.JSON(http.StatusCreated, fileModel)
+		c.JSON(http.StatusOK, gin.H{
+			"code":    0,
+			"message": "上传文件成功",
+		})
 	} else {
 		// default
 		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    -1,
 			"message": "上传文件失败",
 		})
+	}
+}
+
+func removeTmpFile(file *os.File) {
+	// 删除临时文件
+	err := os.Remove(file.Name())
+	if err != nil {
+		log.Printf("移除临时文件失败: %+v", err)
 	}
 }
 

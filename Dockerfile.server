@@ -18,6 +18,10 @@ FROM alpine:3.7
 RUN apk update && apk --no-cache add mailcap ca-certificates tzdata
 
 ENV TZ=Asia/Shanghai
+#设置时区
+#RUN /bin/cp /usr/share/zoneinfo/$TZ /etc/localtime \
+#  && echo '$TZ' >/etc/timezone
+
 
 COPY --from=builder /app/server /app/server
 COPY --from=builder /app/cli /app/cli
