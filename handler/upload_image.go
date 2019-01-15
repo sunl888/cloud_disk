@@ -3,8 +3,8 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/wq1019/cloud_disk/errors"
-	"github.com/zm-dev/go-image_uploader"
-	"github.com/zm-dev/go-image_uploader/image_url"
+	"github.com/wq1019/go-image_uploader"
+	"github.com/wq1019/go-image_uploader/image_url"
 )
 
 type uploadImage struct {

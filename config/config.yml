@@ -35,6 +35,13 @@ minio:
   ssl: "false"
   bucketname: "xxx"
 
+nos:
+  accesskey: "xxx"
+  secretkey: "xxx"
+  bucketname: "xxx"
+  endpoint: "xxx"
+  external-endpoint: "xxx"
+
 image-proxy:
   host: "xxx"
   omitbaseurl: "true"

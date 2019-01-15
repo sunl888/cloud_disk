@@ -16,8 +16,9 @@ import (
 	"github.com/wq1019/cloud_disk/service"
 	"github.com/wq1019/go-file-uploader"
 	fileUploaderNos "github.com/wq1019/go-file-uploader/nos"
-	"github.com/zm-dev/go-image_uploader"
-	"github.com/zm-dev/go-image_uploader/image_url"
+	"github.com/wq1019/go-image_uploader"
+	"github.com/wq1019/go-image_uploader/image_url"
+	imageUploaderNos "github.com/wq1019/go-image_uploader/nos"
 	"go.uber.org/zap"
 	"log"
 	"os"
@@ -143,36 +144,21 @@ func setupNos(s *Server) *nosclient.NosClient {
 }
 
 func setupImageUploader(s *Server) image_uploader.Uploader {
-	SslEnable := s.Conf.Minio.SSL == "true"
-	minioClient, err := minio.New(
-		s.Conf.Minio.Host,
-		s.Conf.Minio.AccessKey,
-		s.Conf.Minio.SecretKey,
-		SslEnable,
-	)
-	if err != nil {
-		log.Fatalf("minio client 创建失败! error: %+v", err)
-	}
-	return image_uploader.NewMinioUploader(
+	nosClient := setupNos(s)
+	return imageUploaderNos.NewNosUploader(
 		image_uploader.HashFunc(image_uploader.MD5HashFunc),
 		image_uploader.NewDBStore(s.DB),
-		minioClient,
-		s.Conf.Minio.BucketName,
+		nosClient,
+		s.Conf.Nos.BucketName,
 		image_uploader.Hash2StorageNameFunc(image_uploader.TwoCharsPrefixHash2StorageNameFunc),
 	)
 }
 
 func setupImageURL(s *Server) image_url.URL {
-	var baseURL string
-	if s.Conf.Minio.SSL == "true" {
-		baseURL = "https://" + s.Conf.Minio.Host
-	} else {
-		baseURL = "http://" + s.Conf.Minio.Host
-	}
-	return image_url.NewImageproxyURL(
+	return image_url.NewNosImageProxyURL(
 		s.Conf.ImageProxy.Host,
-		baseURL,
-		s.Conf.Minio.BucketName,
+		s.Conf.Nos.ExternalEndpoint,
+		s.Conf.Nos.BucketName,
 		s.Conf.ImageProxy.OmitBaseUrl == "true",
 		image_uploader.Hash2StorageNameFunc(image_uploader.TwoCharsPrefixHash2StorageNameFunc),
 	)

@@ -5,7 +5,7 @@ import (
 	"github.com/wq1019/cloud_disk/errors"
 	"github.com/wq1019/cloud_disk/handler/middleware"
 	"github.com/wq1019/cloud_disk/service"
-	"github.com/zm-dev/go-image_uploader/image_url"
+	"github.com/wq1019/go-image_uploader/image_url"
 	"net/http"
 )
 

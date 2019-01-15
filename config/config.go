@@ -43,10 +43,11 @@ type MinioConfig struct {
 }
 
 type NosConfig struct {
-	Endpoint   string `json:"endpoint"`
-	AccessKey  string `json:"accesskey"`
-	SecretKey  string `json:"secretkey"`
-	BucketName string `json:"bucketname"`
+	Endpoint         string `json:"endpoint"`
+	AccessKey        string `json:"accesskey"`
+	SecretKey        string `json:"secretkey"`
+	BucketName       string `json:"bucketname"`
+	ExternalEndpoint string `json:"external-endpoint"`
 }
 
 type ImageProxyConfig struct {

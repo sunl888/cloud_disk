@@ -261,7 +261,7 @@ func (uf *uploadFile) UploadV2(c *gin.Context) {
 			_ = c.Error(errors.BadRequest("您的免费空间已经用完啦, 赶紧提升您的用户等级吧 ^_^", err))
 			return
 		}
-		// 上传到 minio
+		// 上传到 nos
 		uFile, err := uf.u.UploadChunk(go_file_uploader.FileHeader{Filename: l.Filename, Size: fileStat.Size(), File: file}, "")
 		if err != nil {
 			_ = c.Error(errors.InternalServerError(fmt.Sprintf("上传失败: %+v", err), err))

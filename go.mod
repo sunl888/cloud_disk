@@ -32,8 +32,8 @@ require (
 	github.com/urfave/cli v1.20.0
 	github.com/vmihailenco/msgpack v4.0.1+incompatible
 	github.com/wq1019/go-file-uploader v1.0.1
+	github.com/wq1019/go-image_uploader v1.0.1
 	github.com/zm-dev/gerrors v0.0.4
-	github.com/zm-dev/go-image_uploader v0.5.4
 	go.uber.org/atomic v1.3.2 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.9.1
