@@ -215,7 +215,6 @@ func (f *dbFolder) DeleteFolder(ids []int64, userId int64) (allowDelFileHashList
 	if likeSql == "" {
 		return nil, errors.RecordNotFound("没有要删除的记录")
 	}
-	fmt.Println(likeSql)
 	likeSql = strings.TrimRight(likeSql, "OR")
 	f.db.Model(model.Folder{}).
 		Where(likeSql).

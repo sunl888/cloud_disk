@@ -341,8 +341,6 @@ func (uf *uploadFile) UploadV3(c *gin.Context) {
 			}
 		}
 	}
-	// TODO 第一次上传时检查文件是否已存在
-
 	// 从 form-data 中获取数据块
 	postChunkData, fh, err := c.Request.FormFile("file-data")
 	if err != nil {
@@ -375,8 +373,8 @@ func (uf *uploadFile) UploadV3(c *gin.Context) {
 		_ = c.Error(errors.InternalServerError(fmt.Sprintf("读取第%d个数据块失败: %+v", l.ChunkIndex, err), err))
 		return
 	}
-	_, err = file.WriteAt(fBytes, 0)
-	if err != nil {
+	n, err := file.WriteAt(fBytes, 0)
+	if err != nil || n <= 0 {
 		_ = c.Error(errors.InternalServerError(fmt.Sprintf("合并第%d个数据块失败: %+v", l.ChunkIndex, err), err))
 		return
 	}
@@ -389,6 +387,12 @@ func (uf *uploadFile) UploadV3(c *gin.Context) {
 		return
 	}
 	if l.TotalChunk == l.ChunkIndex {
+		// 跳转到文件的开头
+		_, err := file.Seek(0, io.SeekStart)
+		if err != nil {
+			_ = c.Error(errors.InternalServerError(fmt.Sprintf("seek file 失败: %+v", err)))
+			return
+		}
 		// 获取 fileInfo 信息
 		fileStat, err := file.Stat()
 		if err != nil {

@@ -131,7 +131,6 @@ func setupMinio(s *Server) *minio.Client {
 }
 
 func setupNos(s *Server) *nosclient.NosClient {
-	fmt.Println(s.Conf.Nos.Endpoint)
 	nosClient, err := nosclient.New(&nosConfig.Config{
 		Endpoint:  s.Conf.Nos.Endpoint,
 		AccessKey: s.Conf.Nos.AccessKey,
