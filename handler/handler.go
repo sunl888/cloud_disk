@@ -16,7 +16,7 @@ func CreateHTTPHandler(s *server.Server) http.Handler {
 	userHandler := NewUserHandler(s.ImageUrl)
 	uploadFileHandler := NewUploadFileHandler(s.FileUploader)
 	uploadImageHandler := NewUploadImage(s.ImageUploader, s.ImageUrl)
-	folderHandler := NewFolderHandler(s.MinioClient, s.BucketName)
+	folderHandler := NewFolderHandler(s.NosClient, s.BucketName)
 	fileHandler := NewFileHandler()
 	downloadHandler := NewDownloadHandler(s.FileUploader)
 	groupHandler := NewGroupHandler()
@@ -70,9 +70,12 @@ func CreateHTTPHandler(s *server.Server) http.Handler {
 		authorized.PUT("/folder/rename", folderHandler.RenameFolder)
 		// 文件下载
 		authorized.GET("/download", downloadHandler.Download)
+		// 获取文件分享链接
+		authorized.GET("/share_link", downloadHandler.GetShareLink)
 		// 获取要下载的文件和目录的详细信息
 		authorized.GET("/pre_download", downloadHandler.PreDownload)
 	}
+	//api.GET("/dl", downloadHandler.Download)
 
 	adminRouter := api.Group("/admin")
 	adminRouter.Use(middleware.AuthMiddleware, middleware.AdminMiddleware)

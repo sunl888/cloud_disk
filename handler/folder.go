@@ -2,8 +2,9 @@ package handler
 
 import (
 	"fmt"
+	model2 "github.com/NetEase-Object-Storage/nos-golang-sdk/model"
+	"github.com/NetEase-Object-Storage/nos-golang-sdk/nosclient"
 	"github.com/gin-gonic/gin"
-	"github.com/minio/minio-go"
 	"github.com/wq1019/cloud_disk/errors"
 	"github.com/wq1019/cloud_disk/handler/middleware"
 	"github.com/wq1019/cloud_disk/model"
@@ -13,8 +14,8 @@ import (
 )
 
 type folderHandler struct {
-	minioClient *minio.Client
-	bucketName  string
+	nosClient  *nosclient.NosClient
+	bucketName string
 }
 
 // RenameFolder godoc
@@ -171,7 +172,9 @@ func (f *folderHandler) DeleteSource(c *gin.Context) {
 		_ = c.Error(errors.BadRequest("请指定要删除的文件或者目录ID"))
 		return
 	}
-
+	deleteMultiObjects := model2.DeleteMultiObjects{
+		Quiet: false, //详细和静默模式，设置为 true 的时候，只返回删除错误的文件列表，设置为 false 的时候，成功和失败的文件列表都返回
+	}
 	var fileHashList []string
 	authId := middleware.UserId(c)
 	// 删除指定的文件
@@ -187,8 +190,8 @@ func (f *folderHandler) DeleteSource(c *gin.Context) {
 			_ = c.Error(err)
 			return
 		}
-		for _, v := range hashList {
-			fileHashList = append(fileHashList, v)
+		for _, hash := range hashList {
+			deleteMultiObjects.Append(model2.DeleteObject{Key: hash[:2] + "/" + hash[2:]})
 		}
 	}
 	// 删除目录列表
@@ -198,20 +201,24 @@ func (f *folderHandler) DeleteSource(c *gin.Context) {
 			_ = c.Error(err)
 			return
 		}
-		for _, v := range hashList {
-			fileHashList = append(fileHashList, v)
+		for _, hash := range hashList {
+			deleteMultiObjects.Append(model2.DeleteObject{Key: hash[:2] + "/" + hash[2:]})
 		}
 	}
-	objectsCh := make(chan string)
-	go func() {
-		defer close(objectsCh)
-		for _, hash := range fileHashList {
-			objectsCh <- hash[:2] + "/" + hash[2:]
-		}
-	}()
-
-	for rErr := range f.minioClient.RemoveObjectsWithContext(c.Request.Context(), f.bucketName, objectsCh) {
-		fmt.Println("Error detected during deletion: ", rErr)
+	for _, hash := range fileHashList {
+		deleteMultiObjects.Append(model2.DeleteObject{
+			Key: hash[:2] + "/" + hash[2:]},
+		)
+	}
+	deleteRequest := &model2.DeleteMultiObjectsRequest{
+		Bucket:        f.bucketName,
+		DelectObjects: &deleteMultiObjects,
+	}
+	fmt.Println(f.bucketName)
+	_, err := f.nosClient.DeleteMultiObjects(deleteRequest)
+	if err != nil {
+		_ = c.Error(errors.BadRequest(fmt.Sprintf("删除文件失败: %+v", err), err))
+		return
 	}
 	c.Status(http.StatusNoContent)
 }
@@ -365,6 +372,6 @@ func (*folderHandler) Copy2Folder(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-func NewFolderHandler(client *minio.Client, bucketName string) *folderHandler {
-	return &folderHandler{minioClient: client, bucketName: bucketName}
+func NewFolderHandler(client *nosclient.NosClient, bucketName string) *folderHandler {
+	return &folderHandler{nosClient: client, bucketName: bucketName}
 }

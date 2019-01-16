@@ -10,8 +10,10 @@ import (
 	uploader "github.com/wq1019/go-file-uploader"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type downloadHandler struct {
@@ -93,6 +95,32 @@ func (d *downloadHandler) PreDownload(c *gin.Context) {
 		folderFiles[i].RelativePath = relativePath
 	}
 	c.JSON(http.StatusOK, folderFiles)
+}
+
+func (d *downloadHandler) GetShareLink(c *gin.Context) {
+	l := struct {
+		FolderId int64 `json:"folder_id" form:"folder_id"`
+		FileId   int64 `json:"file_id" form:"file_id"`
+	}{}
+	if err := c.ShouldBind(&l); err != nil {
+		_ = c.Error(err)
+		return
+	}
+	authId := middleware.UserId(c)
+	file, err := service.LoadFile(c.Request.Context(), l.FolderId, l.FileId, authId)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	u, err := d.u.PresignedGetObject(file.Hash, time.Second*1, url.Values{})
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"status": http.StatusOK,
+		"data":   u.String() + "?download=" + file.Filename,
+	})
 }
 
 // 文件下载
