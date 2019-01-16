@@ -30,6 +30,7 @@ type FormData struct {
 	Filename    string `json:"filename" form:"filename"`
 }
 
+// 普通文件上传
 func (uf *uploadFile) UploadFile(c *gin.Context) {
 	l := struct {
 		FolderId int64 `json:"folder_id" form:"folder_id"`
@@ -76,7 +77,7 @@ func (uf *uploadFile) UploadFile(c *gin.Context) {
 		return
 	}
 	defer uploadFile.Close()
-	uFile, err := uf.u.Upload(go_file_uploader.FileHeader{Filename: fh.Filename, Size: fh.Size, File: uploadFile}, "")
+	uFile, err := uf.u.UploadChunk(go_file_uploader.FileHeader{Filename: fh.Filename, Size: fh.Size, File: uploadFile}, "")
 	if err != nil {
 		_ = c.Error(errors.InternalServerError("上传失败", err))
 		return
@@ -130,6 +131,7 @@ func validForm(l *FormData) (ok bool, err error) {
 	return true, nil
 }
 
+// 分片上传 v1
 func (uf *uploadFile) UploadV2(c *gin.Context) {
 	l := FormData{}
 	if err := c.ShouldBind(&l); err != nil {
@@ -304,6 +306,7 @@ const (
 	MaxPostFileSize = 40 << 20 // 40 MB
 )
 
+// 分片上传 v2
 func (uf *uploadFile) UploadV3(c *gin.Context) {
 	l := FormData{}
 	if err := c.ShouldBind(&l); err != nil {

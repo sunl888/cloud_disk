@@ -98,14 +98,6 @@ func setupFileStore(s *Server) go_file_uploader.Store {
 }
 
 func setupFileUploader(s *Server) go_file_uploader.Uploader {
-	// minio
-	//return fileUploaderMinio.NewMinioUploader(
-	//	go_file_uploader.HashFunc(go_file_uploader.MD5HashFunc),
-	//	setupMinio(s),
-	//	setupFileStore(s),
-	//	s.Conf.Nos.BucketName,
-	//	go_file_uploader.Hash2StorageNameFunc(go_file_uploader.TwoCharsPrefixHash2StorageNameFunc),
-	//)
 	return fileUploaderNos.NewNosUploader(
 		go_file_uploader.HashFunc(go_file_uploader.MD5HashFunc),
 		setupNos(s),
@@ -113,6 +105,7 @@ func setupFileUploader(s *Server) go_file_uploader.Uploader {
 		s.Conf.Nos.BucketName,
 		go_file_uploader.Hash2StorageNameFunc(go_file_uploader.TwoCharsPrefixHash2StorageNameFunc),
 		s.Conf.Nos.Endpoint,
+		s.Conf.Nos.ExternalEndpoint,
 	)
 }
 
