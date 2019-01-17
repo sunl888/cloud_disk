@@ -146,27 +146,27 @@ func (d *downloadHandler) Download(c *gin.Context) {
 		return
 	}
 	c.Writer.Header().Add("Content-Disposition", "attachment;filename="+file.Filename)
-	rangeVal := c.Request.Header.Get("Range")
-	if rangeVal != "" {
+	reqRange := c.Request.Header.Get("Range")
+	if reqRange != "" {
 		var (
 			start       int64 // not null
 			end         int64 // not null
-			prefixIndex = strings.Index(rangeVal, "-")
+			prefixIndex = strings.Index(reqRange, "-")
 		)
 		if prefixIndex == -1 {
 			_ = c.Error(errors.BadRequest("Http range header error, not found prefix `-`"))
 			return
 		}
-		start, err = strconv.ParseInt(rangeVal[6:prefixIndex], 10, 64)
+		start, err = strconv.ParseInt(reqRange[6:prefixIndex], 10, 64)
 		if err != nil {
 			_ = c.Error(err)
 			return
 		}
-		if rangeVal[prefixIndex+1:] == "" {
+		if reqRange[prefixIndex+1:] == "" {
 			_ = c.Error(errors.BadRequest("Http range header error, end value not exist."))
 			return
 		}
-		end, err = strconv.ParseInt(rangeVal[prefixIndex+1:], 10, 64)
+		end, err = strconv.ParseInt(reqRange[prefixIndex+1:], 10, 64)
 		if err != nil {
 			_ = c.Error(err)
 			return
@@ -175,8 +175,8 @@ func (d *downloadHandler) Download(c *gin.Context) {
 		c.Writer.Header().Add("Content-Range", fmt.Sprintf("bytes %d-%d/%d", start, end, file.Size))
 		// 这里必须要提前设置状态吗为 206 否则会 Warning https://github.com/gin-gonic/gin/issues/471#issuecomment-190186203
 		c.Status(http.StatusPartialContent)
-		fmt.Println("filename:%s,range:%s", file.Filename, rangeVal)
-		readFile, err := d.u.ReadChunk(file.Hash, rangeVal)
+		rangeValue := fmt.Sprintf("bytes=%d-%d", start, end)
+		readFile, err := d.u.ReadChunk(file.Hash, rangeValue)
 		if err != nil {
 			_ = c.Error(err)
 			return
