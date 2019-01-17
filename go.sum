@@ -55,8 +55,9 @@ github.com/mattn/go-isatty v0.0.4/go.mod h1:M+lRXTBqGeGNdLjl/ufCoiOlB5xdOkqRJdNx
 github.com/mattn/go-sqlite3 v1.10.0/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
 github.com/micro/go-config v0.13.2 h1:yxJw8ghIUaydOMrO0QQTcGf8D0QZmPklcTErA8Oi4m0=
 github.com/micro/go-config v0.13.2/go.mod h1:fVecLls1kW+EJsrlkJYqUmVoJa1epSHhsPMDXppELx0=
-github.com/minio/minio-go v6.0.12+incompatible h1:wA5F3AVAzW47K06l3WgXjBPY/Z3QdasUp+cDd6RzUnM=
 github.com/minio/minio-go v6.0.12+incompatible/go.mod h1:7guKYtitv8dktvNUGrhzmNlA5wrAABTQXCoesZdFQO8=
+github.com/minio/minio-go v6.0.13+incompatible h1:SQmjauWGQx5/x2TX47GBeX9xFVEuGB+RJGAVuZzNPtM=
+github.com/minio/minio-go v6.0.13+incompatible/go.mod h1:7guKYtitv8dktvNUGrhzmNlA5wrAABTQXCoesZdFQO8=
 github.com/mitchellh/go-homedir v1.0.0 h1:vKb8ShqSby24Yrqr/yDYkuFz8d0WUjys40rvnGC8aR0=
 github.com/mitchellh/go-homedir v1.0.0/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrkLzIz1N1q0pr0=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd h1:TRLaZ9cD/w8PVh93nsPXa1VrQ6jlwL5oN8l14QlcNfg=
@@ -84,8 +85,8 @@ github.com/urfave/cli v1.20.0/go.mod h1:70zkFmudgCuE/ngEzBv17Jvp/497gISqfk5gWijb
 github.com/vmihailenco/msgpack v4.0.1+incompatible h1:RMF1enSPeKTlXrXdOcqjFUElywVZjjC6pqse21bKbEU=
 github.com/vmihailenco/msgpack v4.0.1+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=
 github.com/wq1019/go-file-uploader v1.0.1/go.mod h1:oJAY5hVNtRqzJq8Qb2eJj3xKZCXNKk5c15HdOGH+7fQ=
-github.com/wq1019/go-file-uploader v1.0.4 h1:UpEQywjVache4g4CqJIy2zqpomUxUb3OCQZD8yeDqHU=
-github.com/wq1019/go-file-uploader v1.0.4/go.mod h1:oJAY5hVNtRqzJq8Qb2eJj3xKZCXNKk5c15HdOGH+7fQ=
+github.com/wq1019/go-file-uploader v1.0.5 h1:oKU7+NOL8gd2Y1zxls7h13pshcdF/fGPRtocLcUtNZo=
+github.com/wq1019/go-file-uploader v1.0.5/go.mod h1:oJAY5hVNtRqzJq8Qb2eJj3xKZCXNKk5c15HdOGH+7fQ=
 github.com/wq1019/go-image_uploader v1.0.1 h1:lTP5fy3msZUl36j9P+FugJzhoDNL/z9MYyHBuGsVawc=
 github.com/wq1019/go-image_uploader v1.0.1/go.mod h1:BVkVnkmunjR4VUcGY2PsXjz2pPxuUOWWQim5k8I7kvg=
 github.com/zm-dev/gerrors v0.0.4 h1:xQVI2+TOeS9VgeR7Dod3VM8tkoXsNiNPawYBsBHUdcg=
@@ -107,8 +108,8 @@ golang.org/x/sys v0.0.0-20190115152922-a457fd036447 h1:YvSRfc0ZOWA3mVMyiDFA+p3qi
 golang.org/x/sys v0.0.0-20190115152922-a457fd036447/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/text v0.3.0 h1:g61tztE5qeGQ89tm6NTjjM9VPIm088od1l6aSorWRWg=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
-golang.org/x/tools v0.0.0-20190116002428-2e4132e53b93 h1:SYiIcPVdcmdmy24ci5s8I4kx1h+vPqnTDvbu3iG9seI=
-golang.org/x/tools v0.0.0-20190116002428-2e4132e53b93/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=
+golang.org/x/tools v0.0.0-20190116231616-b258f6da2383 h1:CWP4O+Q3OaGBOLxV1/YRnzRSpvZYJlauwRUu3auRH5s=
+golang.org/x/tools v0.0.0-20190116231616-b258f6da2383/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=
 google.golang.org/appengine v1.4.0 h1:/wp5JvzpHIxhs/dumFmF7BXTf3Z+dd4uXta4kVyO508=
 google.golang.org/appengine v1.4.0/go.mod h1:xpcJRLb0r/rnEns0DIKYYv+WjYCduHsrkT7/EB5XEv4=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=

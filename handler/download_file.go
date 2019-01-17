@@ -117,9 +117,13 @@ func (d *downloadHandler) GetShareLink(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
+	// TODO 需要测试一下
+	v := url.Values{}
+	v.Add("download", file.Filename)
+	body := v.Encode()
 	c.JSON(http.StatusOK, gin.H{
 		"status": http.StatusOK,
-		"data":   u.String() + "?download=" + file.Filename,
+		"data":   u.String() + "?" + body,
 	})
 }
 
@@ -141,14 +145,7 @@ func (d *downloadHandler) Download(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-	readFile, err := d.u.ReadFile(file.Hash)
-	if err != nil {
-		_ = c.Error(err)
-		return
-	}
-	defer readFile.Close()
 	c.Writer.Header().Add("Content-Disposition", "attachment;filename="+file.Filename)
-	// Range: bytes=start-end
 	rangeVal := c.Request.Header.Get("Range")
 	if rangeVal != "" {
 		var (
@@ -178,19 +175,23 @@ func (d *downloadHandler) Download(c *gin.Context) {
 		c.Writer.Header().Add("Content-Range", fmt.Sprintf("bytes %d-%d/%d", start, end, file.Size))
 		// 这里必须要提前设置状态吗为 206 否则会 Warning https://github.com/gin-gonic/gin/issues/471#issuecomment-190186203
 		c.Status(http.StatusPartialContent)
-
-		buff := make([]byte, end-start)
-		_, err = readFile.ReadAt(buff, start)
+		fmt.Println("filename:%s,range:%s", file.Filename, rangeVal)
+		readFile, err := d.u.ReadChunk(file.Hash, rangeVal)
 		if err != nil {
 			_ = c.Error(err)
 			return
 		}
-		_, err = c.Writer.Write(buff)
+		_, err = io.Copy(c.Writer, readFile)
 		if err != nil {
 			_ = c.Error(err)
 			return
 		}
 	} else {
+		readFile, err := d.u.ReadFile(file.Hash)
+		if err != nil {
+			_ = c.Error(err)
+			return
+		}
 		// 整个文件下载
 		_, err = io.Copy(c.Writer, readFile)
 		if err != nil {

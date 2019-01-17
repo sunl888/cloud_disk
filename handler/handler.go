@@ -47,11 +47,7 @@ func CreateHTTPHandler(s *server.Server) http.Handler {
 		// 退出登录
 		authorized.GET("/auth/logout", authHandler.Logout)
 		// 上传文件
-		authorized.POST("/upload_file", uploadFileHandler.UploadFile)
-		// 上传文件测试
-		authorized.POST("/upload_file_v2", uploadFileHandler.UploadV2)
-		// 上传文件 v3
-		authorized.POST("/upload_file_v3", uploadFileHandler.UploadV3)
+		authorized.POST("/upload_file", uploadFileHandler.UploadChunk)
 		// 上传图片
 		authorized.POST("/upload_image", uploadImageHandler.UploadImage)
 		// 指定目录下第一层的资源列表
