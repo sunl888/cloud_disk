@@ -71,7 +71,6 @@ func CreateHTTPHandler(s *server.Server) http.Handler {
 		// 获取要下载的文件和目录的详细信息
 		authorized.GET("/pre_download", downloadHandler.PreDownload)
 	}
-	//api.GET("/dl", downloadHandler.Download)
 
 	adminRouter := api.Group("/admin")
 	adminRouter.Use(middleware.AuthMiddleware, middleware.AdminMiddleware)

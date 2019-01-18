@@ -17,6 +17,9 @@ func (g *groupService) GroupCreate(group *model.Group) (err error) {
 	if isExist {
 		return model.ErrGroupAlreadyExist
 	}
+	//if group.MaxStorage > model.MaxAllowSize{
+	//	return errors.New("数值太大")
+	//}
 	return g.GroupStore.GroupCreate(group)
 }
 

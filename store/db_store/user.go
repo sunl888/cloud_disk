@@ -10,6 +10,20 @@ type dbUser struct {
 	db *gorm.DB
 }
 
+func (u *dbUser) UserUpdateUsedStorage(userId int64, storage uint64, operator string) (err error) {
+	if userId <= 0 {
+		return model.ErrUserNotExist
+	}
+	switch operator {
+	case "+":
+	case "-":
+	default:
+		return model.ErrorOperatorNotValid
+	}
+	return u.db.Model(model.User{Id: userId}).
+		UpdateColumn("used_storage", gorm.Expr("used_storage "+operator+" ?", storage)).Error
+}
+
 func (u *dbUser) UserExist(id int64) (bool, error) {
 	var count uint8
 	err := u.db.Model(model.User{}).Where(model.User{Id: id}).Count(&count).Error
@@ -55,7 +69,7 @@ func (u *dbUser) UserUpdate(userId int64, data map[string]interface{}) error {
 	}
 	return u.db.Model(model.User{Id: userId}).
 		Select(
-			"name", "gender", "used_storage", "password", "is_ban", "used_storage", "group_id",
+			"name", "gender", "password", "is_ban", "group_id",
 			"is_admin", "nickname", "email", "avatar_hash", "profile",
 		).
 		Updates(data).Error

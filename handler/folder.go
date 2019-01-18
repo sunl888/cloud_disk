@@ -356,9 +356,8 @@ func (*folderHandler) Copy2Folder(c *gin.Context) {
 			totalFileSize += totalSize
 		}
 	}
-	auth := middleware.LoggedUser(c)
 	if totalFileSize > 0 {
-		err = service.UserUpdateUsedStorage(c.Request.Context(), authId, totalFileSize+auth.UsedStorage)
+		err = service.UserUpdateUsedStorage(c.Request.Context(), authId, totalFileSize, model.OperatorAdd)
 		if err != nil {
 			_ = c.Error(err)
 			return

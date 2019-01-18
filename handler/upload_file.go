@@ -104,7 +104,7 @@ func (uf *uploadFile) UploadChunk(c *gin.Context) {
 			return
 		}
 		// 更新用户已使用的空间
-		err = service.UserUpdateUsedStorage(c.Request.Context(), authId, uint64(file.Size))
+		err = service.UserUpdateUsedStorage(c.Request.Context(), authId, uint64(file.Size), model.OperatorAdd)
 		if err != nil {
 			_ = c.Error(err)
 			return
@@ -159,7 +159,7 @@ func (uf *uploadFile) UploadChunk(c *gin.Context) {
 				return
 			}
 			// 更新用户已使用的空间
-			err = service.UserUpdateUsedStorage(c.Request.Context(), authId, uint64(file.Size))
+			err = service.UserUpdateUsedStorage(c.Request.Context(), authId, uint64(file.Size), model.OperatorAdd)
 			if err != nil {
 				_ = c.Error(err)
 				return

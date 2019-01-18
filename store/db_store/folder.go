@@ -225,8 +225,9 @@ func (f *dbFolder) DeleteFolder(ids []int64, userId int64) (allowDelFileHashList
 
 	// 统计每个文件的引用次数, 如果该文件只被引用了一次, 则可以去 minio 中将这个文件直接删除
 	var originFileIds []int64
-	f.db.Table("folder_files").Where("folder_id IN (?)", waitDelFolderIds).Pluck("DISTINCT origin_file_id", &originFileIds)
-	//originFileIds = removeRepeatedElement(originFileIds)
+	f.db.Table("folder_files").
+		Where("folder_id IN (?)", waitDelFolderIds).
+		Pluck("DISTINCT origin_file_id", &originFileIds)
 	for _, id := range originFileIds {
 		var count int8
 		f.db.Table("folder_files").
@@ -245,23 +246,6 @@ func (f *dbFolder) DeleteFolder(ids []int64, userId int64) (allowDelFileHashList
 	if len(allowDelFileHashList) > 0 {
 		// 在数据库中删除所有被引用了一次的文件
 		f.db.Exec("DELETE FROM `files` WHERE `hash` IN (?)", allowDelFileHashList)
-	}
-	return
-}
-
-func removeRepeatedElement(arr []int64) (newArr []int64) {
-	newArr = make([]int64, 0)
-	for i := 0; i < len(arr); i++ {
-		repeat := false
-		for j := i + 1; j < len(arr); j++ {
-			if arr[i] == arr[j] {
-				repeat = true
-				break
-			}
-		}
-		if !repeat {
-			newArr = append(newArr, arr[i])
-		}
 	}
 	return
 }

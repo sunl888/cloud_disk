@@ -31,7 +31,7 @@ require (
 	github.com/ugorji/go/codec v0.0.0-20181209151446-772ced7fd4c2 // indirect
 	github.com/urfave/cli v1.20.0
 	github.com/vmihailenco/msgpack v4.0.1+incompatible
-	github.com/wq1019/go-file-uploader v1.0.5
+	github.com/wq1019/go-file-uploader v1.0.6
 	github.com/wq1019/go-image_uploader v1.0.1
 	github.com/zm-dev/gerrors v0.0.4
 	go.uber.org/atomic v1.3.2 // indirect

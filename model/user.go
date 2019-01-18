@@ -24,11 +24,19 @@ type User struct {
 	UpdatedAt   time.Time
 }
 
+var ErrorOperatorNotValid = errors.New("操作符不合法")
+
+const (
+	OperatorAdd = "+"
+	OperatorSub = "-"
+)
+
 type UserStore interface {
 	UserExist(userId int64) (bool, error)
 	UserLoad(userId int64) (*User, error)
 	UserIsNotExistErr(err error) bool
 	UserUpdate(userId int64, data map[string]interface{}) error
+	UserUpdateUsedStorage(userId int64, storage uint64, operator string) (err error)
 	UserCreate(user *User) error
 	UserList(offset, limit int64) (user []*User, count int64, err error)
 	UserListByUserIds(userIds []interface{}) ([]*User, error)
@@ -40,7 +48,6 @@ type UserService interface {
 	UserLogin(account, password string) (*Ticket, error)
 	UserRegister(account string, certificateType CertificateType, password string) (userId int64, err error)
 	UserUpdatePassword(userId int64, newPassword string) (err error)
-	UserUpdateUsedStorage(userId int64, usedStorage uint64) (err error)
 	UserUpdateBanStatus(userId int64, newBanStatus bool) (err error)
 }
 

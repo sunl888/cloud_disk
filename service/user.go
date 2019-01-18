@@ -68,12 +68,6 @@ func (uSvc *userService) UserUpdatePassword(userId int64, newPassword string) er
 	})
 }
 
-func (uSvc *userService) UserUpdateUsedStorage(userId int64, newUsedStorage uint64) error {
-	return uSvc.UserStore.UserUpdate(userId, map[string]interface{}{
-		"used_storage": newUsedStorage,
-	})
-}
-
 func (uSvc *userService) UserUpdateBanStatus(userId int64, newBanStatus bool) error {
 	return uSvc.UserStore.UserUpdate(userId, map[string]interface{}{
 		"is_ban": newBanStatus,
@@ -104,8 +98,8 @@ func UserUpdatePassword(ctx context.Context, userId int64, newPassword string) e
 	return FromContext(ctx).UserUpdatePassword(userId, newPassword)
 }
 
-func UserUpdateUsedStorage(ctx context.Context, userId int64, newUsedStorage uint64) error {
-	return FromContext(ctx).UserUpdateUsedStorage(userId, newUsedStorage)
+func UserUpdateUsedStorage(ctx context.Context, userId int64, storage uint64, operator string) error {
+	return FromContext(ctx).UserUpdateUsedStorage(userId, storage, operator)
 }
 
 func UserUpdate(ctx context.Context, userId int64, data map[string]interface{}) error {
