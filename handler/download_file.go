@@ -186,6 +186,7 @@ func (d *downloadHandler) Download(c *gin.Context) {
 			_ = c.Error(err)
 			return
 		}
+		defer readFile.Close()
 	} else {
 		readFile, err := d.u.ReadFile(file.Hash)
 		if err != nil {
@@ -198,6 +199,7 @@ func (d *downloadHandler) Download(c *gin.Context) {
 			_ = c.Error(err)
 			return
 		}
+		defer readFile.Close()
 		c.Status(http.StatusOK)
 	}
 }

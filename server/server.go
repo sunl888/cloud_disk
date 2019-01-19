@@ -4,6 +4,7 @@ import (
 	"github.com/NetEase-Object-Storage/nos-golang-sdk/nosclient"
 	"github.com/go-redis/redis"
 	"github.com/jinzhu/gorm"
+	"github.com/spf13/afero"
 	"github.com/wq1019/cloud_disk/config"
 	"github.com/wq1019/cloud_disk/pkg/pubsub"
 	"github.com/wq1019/cloud_disk/service"
@@ -27,5 +28,5 @@ type Server struct {
 	NosClient     *nosclient.NosClient
 	ImageUploader image_uploader.Uploader
 	FileUploader  go_file_uploader.Uploader
-	//BaseFs        afero.Fs
+	BaseFs        afero.Fs
 }
