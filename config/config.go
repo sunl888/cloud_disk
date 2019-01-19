@@ -1,6 +1,5 @@
 package config
 
-import "C"
 import (
 	"github.com/micro/go-config"
 	"github.com/micro/go-config/source/env"
