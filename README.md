@@ -23,3 +23,17 @@
 
 ## 安装
 - 请移驾到 [部署脚本](https://github.com/wq1019/cloud-disk-deply.git). 
+
+
+## 支持
+
+<table>
+  <thead>
+    <th>JetBrains</th>
+  </thead>
+  <tbody>
+    <tr>
+      <td><img src="https://cdn.jsdelivr.net/gh/sunl888/img@main/images/jetbrains.svg"  alt="JetBrains"/>
+    </tr>
+  </tbody>
+</table>
