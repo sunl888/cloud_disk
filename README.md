@@ -1,5 +1,6 @@
 # 网络云盘
 [![Build Status](https://www.travis-ci.org/wq1019/cloud_disk.svg?branch=master)](https://www.travis-ci.org/wq1019/cloud_disk)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsunl888%2Fcloud_disk.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsunl888%2Fcloud_disk?ref=badge_shield)
 ## 依赖
 - Minio || 网易云对象存储(nos)
 - Mysql [phpMyAdmin]
@@ -39,11 +40,9 @@
 </table>
 
 
-
-
 ## ⭐ Star 历史
-
 [![Stargazers over time](https://starchart.cc/sunl888/cloud_disk.svg)](https://starchart.cc/sunl888/cloud_disk)
+ 
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsunl888%2Fcloud_disk.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsunl888%2Fcloud_disk?ref=badge_shield&issueType=license)
