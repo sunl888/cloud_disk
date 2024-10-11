@@ -1,3 +1,6 @@
+> 注意：此项目只是大学时期无聊时和小伙伴开发的一款小demo，虽然功能都实现了，但是代码实在太业余，参考价值实在有限，同时前端代码仓库已经不小心被删除，请大家谨慎参考。
+> 如果你想用来做大学生毕业设计，可以自己实现一下前端功能，接口基本都有的。
+> 
 # 网络云盘
 [![Build Status](https://www.travis-ci.org/wq1019/cloud_disk.svg?branch=master)](https://www.travis-ci.org/wq1019/cloud_disk)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsunl888%2Fcloud_disk.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsunl888%2Fcloud_disk?ref=badge_shield)
