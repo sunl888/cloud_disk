@@ -41,8 +41,7 @@
 
 
 ## ⭐ Star 历史
-[![Stargazers over time](https://starchart.cc/sunl888/cloud_disk.svg)](https://starchart.cc/sunl888/cloud_disk)
- 
+[![Stargazers over time](https://starchart.cc/sunl888/cloud_disk.svg?variant=adaptive)](https://starchart.cc/sunl888/cloud_disk)
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsunl888%2Fcloud_disk.svg?type=large&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsunl888%2Fcloud_disk?ref=badge_large&issueType=license)
