@@ -1,5 +1,6 @@
 # 网络云盘
 [![Build Status](https://www.travis-ci.org/wq1019/cloud_disk.svg?branch=master)](https://www.travis-ci.org/wq1019/cloud_disk)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsunl888%2Fcloud_disk.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsunl888%2Fcloud_disk?ref=badge_shield)
 ## 依赖
 - Minio || 网易云对象存储(nos)
 - Mysql [phpMyAdmin]
@@ -37,3 +38,7 @@
     </tr>
   </tbody>
 </table>
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsunl888%2Fcloud_disk.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsunl888%2Fcloud_disk?ref=badge_large)
