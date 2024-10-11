@@ -37,3 +37,13 @@
     </tr>
   </tbody>
 </table>
+
+
+
+
+## ⭐ Star 历史
+
+[![Stargazers over time](https://starchart.cc/sunl888/cloud_disk.svg)](https://starchart.cc/sunl888/cloud_disk)
+https://app.fossa.com/api/projects/git+github.com/sunl888/cloud_disk.svg?type=large
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsunl888%2Fcloud_disk.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsunl888%2Fcloud_disk?ref=badge_shield&issueType=license)
